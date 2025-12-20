@@ -1,10 +1,33 @@
 ﻿#include <SFML/Graphics.hpp>
 #include <iostream>
 
-enum class GameState { Menu, Game };
+enum class GameState { Menu, Game, GameMenu };
+
+class Button {
+public:
+    Button(const sf::Vector2f& size, const sf::Vector2f& position, const sf::Color& color, const std::string& textString, const sf::Font& font, unsigned int charSize)
+        : shape(size), text(font, textString, charSize) {
+        shape.setPosition(position);
+        shape.setFillColor(color);
+        text.setPosition(sf::Vector2f(position.x + size.x/2.0f - text.getLocalBounds().size.x/2.0f, position.y + size.y / 2.0f - text.getLocalBounds().size.y / 2.0f - 5.0f));
+    }
+    void draw(sf::RenderWindow& window) {
+        window.draw(shape);
+        window.draw(text);
+    }
+    bool isMouseOver(const sf::Vector2f& mousePos) {
+        return shape.getGlobalBounds().contains(mousePos);
+    }
+    void setFillColor(const sf::Color& color) {
+        shape.setFillColor(color);
+    }
+private:
+    sf::RectangleShape shape;
+    sf::Text text;
+};
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "Menu z Przyciskami");
+    sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "Flanki");
     window.setFramerateLimit(60);
 
     GameState currentState = GameState::Menu;
@@ -12,21 +35,8 @@ int main() {
     sf::Font font;
     if (!font.openFromFile("C:\\Windows\\Fonts\\arial.ttf")) return -1;
 
-    // --- PRZYCISK START ---
-    sf::RectangleShape playButton({ 200.f, 60.f });
-    playButton.setPosition({ 300.f, 200.f });
-    playButton.setFillColor(sf::Color(50, 50, 50));
-
-    sf::Text playText(font, "START", 30);
-    playText.setPosition({ 350.f, 210.f });
-
-    // --- PRZYCISK WYJSCIE ---
-    sf::RectangleShape exitButton({ 200.f, 60.f });
-    exitButton.setPosition({ 300.f, 300.f });
-    exitButton.setFillColor(sf::Color(50, 50, 50));
-
-    sf::Text exitText(font, "WYJSCIE", 30);
-    exitText.setPosition({ 335.f, 310.f });
+	Button playButton({ 200.f, 60.f }, { 300.f, 200.f }, sf::Color(50, 50, 50), "START", font, 30);
+	Button exitButton({ 200.f, 60.f }, { 300.f, 300.f }, sf::Color(50, 50, 50), "WyJSCIE", font, 30);
 
     while (window.isOpen()) {
         // Pobierz pozycję myszy względem okna
@@ -40,10 +50,10 @@ int main() {
                 // Obsługa kliknięć
                 if (const auto* mouseEvent = event->getIf<sf::Event::MouseButtonPressed>()) {
                     if (mouseEvent->button == sf::Mouse::Button::Left) {
-                        if (playButton.getGlobalBounds().contains(mousePos)) {
+                        if (playButton.isMouseOver(mousePos)) {
                             currentState = GameState::Game;
                         }
-                        if (exitButton.getGlobalBounds().contains(mousePos)) {
+                        if (exitButton.isMouseOver(mousePos)) {
                             window.close();
                         }
                     }
@@ -54,7 +64,7 @@ int main() {
         // --- LOGIKA MENU (EFEKT HOVER) ---
         if (currentState == GameState::Menu) {
             // Reakcja na najechanie myszką - START
-            if (playButton.getGlobalBounds().contains(mousePos)) {
+            if (playButton.isMouseOver(mousePos)) {
                 playButton.setFillColor(sf::Color(100, 100, 100));
             }
             else {
@@ -62,7 +72,7 @@ int main() {
             }
 
             // Reakcja na najechanie myszką - WYJSCIE
-            if (exitButton.getGlobalBounds().contains(mousePos)) {
+            if (exitButton.isMouseOver(mousePos)) {
                 exitButton.setFillColor(sf::Color(150, 0, 0)); // Czerwony przy wyjściu
             }
             else {
@@ -71,13 +81,11 @@ int main() {
         }
 
         // --- RYSOWANIE ---
-        window.clear(sf::Color(20, 20, 20));
+        window.clear(sf::Color(0, 0, 255));
 
         if (currentState == GameState::Menu) {
-            window.draw(playButton);
-            window.draw(playText);
-            window.draw(exitButton);
-            window.draw(exitText);
+			playButton.draw(window);
+			exitButton.draw(window);
         }
         else if (currentState == GameState::Game) {
 

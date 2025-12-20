@@ -1,0 +1,22 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/x64/Debug
+/projektpi1/x64/Debug/flanki.tlog
+/projektpi1/x64/Debug
+/projektpi1/projektpi1.vcxproj
+/projektpi1/projektpi1.vcxproj.filters
+/projektpi1/projektpi1.vcxproj.user
+/projektpi1/sfml-audio-3.dll
+/projektpi1/sfml-audio-d-3.dll
+/projektpi1/sfml-graphics-3.dll
+/projektpi1/sfml-graphics-d-3.dll
+/projektpi1/sfml-network-3.dll
+/projektpi1/sfml-network-d-3.dll
+/projektpi1/sfml-system-3.dll
+/projektpi1/sfml-system-d-3.dll
+/projektpi1/sfml-window-3.dll
+/projektpi1/sfml-window-d-3.dll
+*.slnx

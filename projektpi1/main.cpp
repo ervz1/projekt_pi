@@ -19,7 +19,7 @@ int main() {
     GameState currentState = GameState::Menu;
 
     sf::Font font;
-    if (!font.openFromFile("C:\\Windows\\Fonts\\arial.ttf")) return -1;
+    if (!font.openFromFile("assets/fonts/DejaVuSans.ttf")) return -1;
 
 	Button playButton({ 200.f, 60.f }, { 300.f, 200.f }, sf::Color(50, 50, 50), "START", font, 30);
 	Button exitButton({ 200.f, 60.f }, { 300.f, 300.f }, sf::Color(50, 50, 50), "WyJSCIE", font, 30);

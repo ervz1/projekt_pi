@@ -21,10 +21,10 @@ int main() {
     GameState currentState = GameState::Menu;
 
     sf::Font font;
-    if (!font.openFromFile("../assets/fonts/DejaVuSans.ttf")) return -1;
+    if (!font.openFromFile("assets/fonts/DejaVuSans.ttf")) return -1;
 
     sf::SoundBuffer buffer;
-    if (!buffer.loadFromFile("../assets/music/clank.mp3")) return -1;
+    if (!buffer.loadFromFile("assets/music/clank.mp3")) return -1;
     
     sf::Sound sound(buffer);
 

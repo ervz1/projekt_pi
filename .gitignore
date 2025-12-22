@@ -5,6 +5,7 @@
 main
 zshrc
 /.vs
+.vs/
 /x64/Debug
 /projektpi1/x64/Debug/flanki.tlog
 /projektpi1/x64/Debug

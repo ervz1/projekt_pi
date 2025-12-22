@@ -3,6 +3,7 @@
 #include <optional>
 #include "globals.hpp"
 #include "helper.hpp"
+#include <SFML/Audio.hpp>
 
 sf::Vector2f mainWin = { 800.0f, 600.0f };
 
@@ -20,7 +21,13 @@ int main() {
     GameState currentState = GameState::Menu;
 
     sf::Font font;
-    if (!font.openFromFile("assets/fonts/DejaVuSans.ttf")) return -1;
+    if (!font.openFromFile("../assets/fonts/DejaVuSans.ttf")) return -1;
+
+    sf::SoundBuffer buffer;
+    if (!buffer.loadFromFile("../assets/music/clank.mp3")) return -1;
+    
+    sf::Sound sound(buffer);
+
 
 	Button playButton({ 200.f, 60.f }, { 300.f, 200.f }, sf::Color(50, 50, 50), "START", font, 30);
 	Button exitButton({ 200.f, 60.f }, { 300.f, 300.f }, sf::Color(50, 50, 50), "WYJSCIE", font, 30);
@@ -29,9 +36,13 @@ int main() {
     logicalBackground.setPosition({ 0.f, 0.f });
     logicalBackground.setFillColor(sf::Color(0, 0, 255));
 
-    sf::CircleShape ball(50.f);
+    sf::CircleShape can(15.f);
+    can.setFillColor(sf::Color::Yellow);
+    can.setPosition({400.f, 300.f});
+
+    sf::CircleShape ball(15.f);
     ball.setFillColor(sf::Color::Black);
-    ball.setPosition({375.f, 275.f});
+    ball.setPosition({ 650.f, 275.f });
 
     float speed = 200.f;
     sf::Clock clock;
@@ -68,18 +79,43 @@ int main() {
     }
 
     // LOGIKA
-    if (currentState == GameState::Game) {
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::W))
-            ball.move({0.f, -speed * dt});
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::S))
-            ball.move({0.f, speed * dt});
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::A))
-            ball.move({-speed * dt, 0.f});
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::D))
-            ball.move({speed * dt, 0.f});
+    if (currentState == GameState::Game)
+    {
+        sf::Vector2f movement{ 0.f, 0.f };
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::Up))
+            movement.y -= speed * dt;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::Down))
+            movement.y += speed * dt;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::Left))
+            movement.x -= speed * dt;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Scan::Right))
+            movement.x += speed * dt;
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Escape))
             currentState = GameState::Menu;
+
+        ball.move({ movement.x, 0.f });
+        if (ball.getGlobalBounds().findIntersection(can.getGlobalBounds()))
+        {
+            ball.move({ -movement.x, 0.f });
+            can.setFillColor(sf::Color::Magenta);
+            if (sound.getStatus() != sf::Sound::Status::Playing)
+            {
+                sound.play();
+            }
+        }
+
+        ball.move({ 0.f, movement.y });
+        if (ball.getGlobalBounds().findIntersection(can.getGlobalBounds()))
+        {
+            ball.move({ 0.f, -movement.y });
+            can.setFillColor(sf::Color::Magenta);
+            if (sound.getStatus() != sf::Sound::Status::Playing)
+            {
+                sound.play();
+            }
+        }
     }
 
     // DRAW
@@ -93,6 +129,8 @@ int main() {
     }
     else if (currentState == GameState::Game) {
         window.draw(ball);
+        window.draw(can);
+        
     }
 
     window.display();

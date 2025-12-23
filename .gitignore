@@ -23,7 +23,7 @@ zshrc
 /projektpi1/sfml-window-3.dll
 /projektpi1/sfml-window-d-3.dll
 *.slnx
-
+*.sln
 
 .vs/
 Debug/

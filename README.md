@@ -31,3 +31,9 @@ Nawiguj do:
 Skopiuj i wklej poniższy ciąg:
 ```text
 $(CoreLibraryDependencies);%(AdditionalDependencies);sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;sfml-audio-d.lib
+```
+
+### Zaleśnośći w release
+```text
+$(CoreLibraryDependencies);%(AdditionalDependencies);sfml-graphics.lib;sfml-window.lib;sfml-system.lib;sfml-audio.lib
+```

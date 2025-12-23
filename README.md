@@ -3,6 +3,8 @@
 ![SFML](https://img.shields.io/badge/SFML-3.0-green) ![C++](https://img.shields.io/badge/C++-17-blue)
 
 ## 🥸 Konfiguracja Projektu (Visual Studio)
+🦾🦾🦾🦾🦾🦾🦾🦾
+🧿👄🧿
 
 Aby poprawnie skonfigurować projekt, otwórz **Właściwości Projektu** (*Project Properties*) i wprowadź poniższe ustawienia.
 

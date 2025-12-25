@@ -40,10 +40,15 @@ int main() {
     GameState currentState = GameState::Menu;
 
     sf::Font font;
-    if (!font.openFromFile("../assets/fonts/DejaVuSans.ttf")) return -1;
+    if (!font.openFromFile("assets/fonts/DejaVuSans.ttf")) return -1;
 
     sf::SoundBuffer buffer;
+<<<<<<< HEAD
     if (!buffer.loadFromFile("../assets/music/clank.mp3")) return -1;
+=======
+    if (!buffer.loadFromFile("assets/music/clank.mp3")) return -1;
+    
+>>>>>>> 9058253 (save przed pullem)
     sf::Sound sound(buffer);
 
     sf::Clock keyTimer;
@@ -76,6 +81,7 @@ int main() {
         sf::Vector2f mousePos = window.mapPixelToCoords(mousePosI, view);
         float ramp_up = 250.f * dt * 2;
 
+<<<<<<< HEAD
         // EVENT LOOP
         while (const std::optional event = window.pollEvent()) {
             if (event->is<sf::Event::Closed>())
@@ -94,6 +100,31 @@ int main() {
                         if (exitButton.isMouseOver(mousePos))
                             window.close();
                     }
+=======
+    sf::Vector2i mousePosI = sf::Mouse::getPosition(window);
+    sf::Vector2f mousePos = window.mapPixelToCoords(mousePosI, view);
+
+    // EVENT LOOP
+    while (const std::optional event = window.pollEvent()) {
+        if (event->is<sf::Event::Closed>())
+            window.close();
+        
+        else if (const auto* resized = event->getIf<sf::Event::Resized>()) {
+            updateViewViewport(window, view);
+            view.setSize(mainWin);
+            view.setCenter({ mainWin.x / 2.f, mainWin.y / 2.f });
+            window.setView(view);
+        }
+
+        else if (currentState == GameState::Menu) {
+            if (const auto* mouseEvent = event->getIf<sf::Event::MouseButtonPressed>()) {
+                if (mouseEvent->button == sf::Mouse::Button::Left) {
+                    if (playButton.isMouseOver(mousePos))
+                        currentState = GameState::Game;
+
+                    if (exitButton.isMouseOver(mousePos))
+                        window.close();
+>>>>>>> 9058253 (save przed pullem)
                 }
             }
         }

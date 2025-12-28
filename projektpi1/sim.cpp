@@ -125,7 +125,7 @@ int main2() {
                     std::uniform_real_distribution<> dis(0.0f, 800.0f);
                     std::uniform_real_distribution<> dis2(-130.0f, 130.0f);
                     float random_x = dis(gen);
-                    //float random_y = dis(gen);
+                    float random_y = dis(gen);
                     //float random_x = 185.0f;
 
                     //Flight trajectory math:
@@ -142,13 +142,13 @@ int main2() {
                     float physicsConstant = (gravity * distance) / 2.0f;
 
                     //Veloicttyy = gravity * distance /2 / velocityx - ((height * random_x)/ distance) (- because y axis in sfml upside down)
-                    float random_y = (physicsConstant / random_x) - ((height * random_x) / distance);
+                    //float random_y = (physicsConstant / random_x) - ((height * random_x) / distance);
 
 
                     std::cout << random_x << ' ' << random_y << std::endl;
 
-                    float error = dis2(gen);
-                    //float error = 0.0f;
+                    //float error = dis2(gen);
+                    float error = 0.0f;
                     game.velocity = sf::Vector2f(-random_x, -(error + random_y));
                     game.initialVelocity = game.velocity;
                     game.hasHit = false;

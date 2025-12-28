@@ -27,7 +27,7 @@ struct GameStart {
     sf::Vector2f initialVelocity;
 };
 
-int main2() {
+int main() {
     GameStart game;
     sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "Flanki");
     window.setFramerateLimit(60);
@@ -179,8 +179,8 @@ int main2() {
 
 
                     //Margin of error (0 = enemy always hits)
-                    float error = dis2(gen); 
-                    //float error = 0.0f;
+                    //float error = dis2(gen); 
+                    float error = 0.0f;
                     game.velocity = sf::Vector2f(random_x, -(error+ random_y));
                     //game.velocity = sf::Vector2f(687.352, -175.465);
                     game.initialVelocity = game.velocity;

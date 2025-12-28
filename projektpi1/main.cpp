@@ -27,7 +27,12 @@ struct GameStart {
     sf::Vector2f initialVelocity;
 };
 
-int main() {
+void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, float dt, sf::Sound &sound);
+
+void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, sf::CircleShape &ball, sf::CircleShape &can, sf::CircleShape &ball2, GameStart &game);
+
+int main()
+{
 
     // SETUP
     GameStart game;
@@ -82,10 +87,10 @@ int main() {
     
     // =========================================
 
-// 1. czas + mysz
-// 2. event loop 
-// 3. logika gry
-// 4. rysowanie
+    // 1. czas + mysz
+    // 2. event loop 
+    // 3. logika gry
+    // 4. rysowanie
 
     
     while (window.isOpen()) {
@@ -130,45 +135,113 @@ int main() {
     }
     
     // ==== LOGIKA ====
-    if (currentState == GameState::Game){
-        
+    logic(currentState, game, ball, can, ramp_up, ball2, gravity, dt, sound);
+
+    // ==== DRAW ====
+
+    /* RenderWindow window, x
+    View view 
+    RectangleShape logicalBackground
+    GameState currentState x
+ 
+    CircleShape ball x
+    CircleShape ball2 x 
+    CircleShape can x
+    
+    GameStart game 
+    RectangleShape powerBar */
+
+    window.clear(sf::Color::Black);
+    window.setView(view);
+    window.draw(logicalBackground);
+
+    drawGame(currentState, playButton, window, exitButton, ball, can, ball2, game);
+    window.display();
+    }
+}
+
+void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, sf::CircleShape &ball, sf::CircleShape &can, sf::CircleShape &ball2, GameStart &game)
+{
+    if (currentState == GameState::Menu)
+    {
+        playButton.draw(window);
+        exitButton.draw(window);
+    }
+    else if (currentState == GameState::Game)
+    {
+        window.draw(ball);
+        window.draw(can);
+        window.draw(ball2);
+
+        if (!game.isFlying && (game.up > 0.0f || game.left > 0.0f))
+        {
+            if (game.up > 0.0f)
+            {
+                sf::RectangleShape powerBar(sf::Vector2f(10.f, -game.up / 10.f));
+                powerBar.setFillColor(sf::Color::Red);
+                powerBar.setPosition(ball.getPosition());
+                window.draw(powerBar);
+            }
+            if (game.left > 0.0f)
+            {
+                sf::RectangleShape powerBar(sf::Vector2f(-game.left / 10.f, 10.f));
+                powerBar.setFillColor(sf::Color::Red);
+                powerBar.setPosition(ball.getPosition());
+                window.draw(powerBar);
+            }
+        }
+    }
+}
+
+void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, float dt, sf::Sound &sound)
+{
+    if (currentState == GameState::Game)
+    {
+
         // 3.1 Reset rozgrywki
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Escape)) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Escape))
+        {
             currentState = GameState::Menu;
             game = GameStart();
-            ball.setPosition({ game.ball_x, game.ball_y });
+            ball.setPosition({game.ball_x, game.ball_y});
             can.setFillColor(sf::Color::Yellow);
         }
 
         // 3.2 Charge player / AI
 
-        if (!game.isFlying){ // isFlying, turn - bool
-            if (!game.turn) {
-                
+        if (!game.isFlying)
+        { // isFlying, turn - bool
+            if (!game.turn)
+            {
+
                 bool chargingUp = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Up);
                 bool chargingLeft = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Left);
 
-                if (chargingUp || chargingLeft) {
+                if (chargingUp || chargingLeft)
+                {
                     game.isCharging = true;
-                    //Charging until max
-                    if (chargingUp) game.up += ramp_up;
-                    if (chargingLeft) game.left += ramp_up;
+                    // Charging until max
+                    if (chargingUp)
+                        game.up += ramp_up;
+                    if (chargingLeft)
+                        game.left += ramp_up;
 
+                    // If charged to max:
 
-                    //If charged to max:
-                    
-                    //Cap at max
+                    // Cap at max
 
                     /*if (game.up > game.maxCharge) game.up = game.maxCharge;
                     if (game.left > game.maxCharge) game.left = game.maxCharge;*/
 
-
                     // Reset bar
-                    if (game.up > game.maxCharge) game.up = 0.0f;
-                    if (game.left > game.maxCharge) game.left = 0.0f;
+                    if (game.up > game.maxCharge)
+                        game.up = 0.0f;
+                    if (game.left > game.maxCharge)
+                        game.left = 0.0f;
                 }
-                //Throw
-                else if (game.isCharging) {
+                // Throw
+                else if (game.isCharging)
+                {
                     game.isCharging = false;
                     game.isFlying = true;
                     game.velocity = sf::Vector2f(-game.left, -game.up);
@@ -177,72 +250,72 @@ int main() {
                     game.up = 0.0f;
                     game.left = 0.0f;
                 }
-
             }
-            else if (game.turn) {
-                std::random_device rd;  
-                std::mt19937 gen(rd()); 
+            else if (game.turn)
+            {
+                std::random_device rd;
+                std::mt19937 gen(rd());
                 std::uniform_real_distribution<> dis(185.0f, 800.0f);
                 std::uniform_real_distribution<> dis2(-130.0f, 130.0f);
                 float random_x = dis(gen);
 
-                //Flight trajectory math
-                // t = Distance/Vx
-                //Height = (Vy​*t)−(1/2​*Gravity*t^2)
-                //Vy = ((Gravity*Distance) / (2*Vx)) + (Height * Vx / Distance)
+                // Flight trajectory math
+                //  t = Distance/Vx
+                // Height = (Vy​*t)−(1/2​*Gravity*t^2)
+                // Vy = ((Gravity*Distance) / (2*Vx)) + (Height * Vx / Distance)
 
-                //Distance ball2 from can
-                
-                //x axis
+                // Distance ball2 from can
+
+                // x axis
                 float distance = std::abs(can.getPosition().x - ball2.getPosition().x);
 
-                //y axis
+                // y axis
                 float height = can.getPosition().y - ball2.getPosition().y;
 
-                //Velocityx * Velocityy = gravity*distance / 2
+                // Velocityx * Velocityy = gravity*distance / 2
                 float physicsConstant = (gravity * distance) / 2.0f;
 
-                //Veloicttyy = gravity * distance /2 / velocityx - ((height * random_x)/ distance) (- because y axis in sfml upside down)
-                float random_y = (physicsConstant / random_x) -  ((height * random_x)/ distance);
-                
+                // Veloicttyy = gravity * distance /2 / velocityx - ((height * random_x)/ distance) (- because y axis in sfml upside down)
+                float random_y = (physicsConstant / random_x) - ((height * random_x) / distance);
+
                 std::cout << random_x << ' ' << random_y << std::endl;
 
-                //Margin of error (0 = enemy always hits)
-                //float error = dis2(gen); 
+                // Margin of error (0 = enemy always hits)
+                // float error = dis2(gen);
                 float error = 0.0f;
-                game.velocity = sf::Vector2f(random_x, -(error+ random_y));
+                game.velocity = sf::Vector2f(random_x, -(error + random_y));
 
-                //game.velocity = sf::Vector2f(687.352, -175.465);
+                // game.velocity = sf::Vector2f(687.352, -175.465);
                 game.initialVelocity = game.velocity;
                 game.hasHit = false;
-                
 
                 game.isFlying = true;
             }
         }
 
-        else{
-            //Add gravity to y axis of velocity
+        else
+        {
+            // Add gravity to y axis of velocity
             game.velocity.y += gravity * dt;
-            if (!game.turn) {
-                
+            if (!game.turn)
+            {
 
-                //Move based on velocity
+                // Move based on velocity
                 ball.move(game.velocity * dt);
 
-                //Collision
+                // Collision
                 if (ball.getGlobalBounds().findIntersection(can.getGlobalBounds()))
                 {
-                    //Bounce
-                    if (!game.hasHit) {
+                    // Bounce
+                    if (!game.hasHit)
+                    {
 
-                        //Adding data, save velocity if hit
+                        // Adding data, save velocity if hit
 
                         /*std::fstream hit_data;
                         hit_data.open("../assets/data/hit_x_y.txt", std::ios::out | std::ios::app);
                         hit_data << std::abs(game.initialVelocity.x) << ' ' << std::abs(game.initialVelocity.y) << "\n";
                         hit_data.close();*/
-                        
 
                         game.velocity.x = -game.velocity.x * 1.0f;
                         game.velocity.y = -game.velocity.y * 1.0f;
@@ -250,35 +323,33 @@ int main() {
                         if (sound.getStatus() != sf::Sound::Status::Playing)
                         {
                             sound.play();
-
                         }
                         game.hasHit = true;
                     }
-                    
                 }
 
-                //Reset after ground
-                if (ball.getPosition().y > 600.f) {
+                // Reset after ground
+                if (ball.getPosition().y > 600.f)
+                {
                     game.isFlying = false;
-                    game.velocity = { 0.f, 0.f };
-                    ball.setPosition({ game.ball_x, game.ball_y });
+                    game.velocity = {0.f, 0.f};
+                    ball.setPosition({game.ball_x, game.ball_y});
                     game.turn = true;
                 }
-                
             }
-            else if (game.turn) {
-                
+            else if (game.turn)
+            {
 
-                //Move based on velocity
-                ball2.move(game.velocity* dt);
+                // Move based on velocity
+                ball2.move(game.velocity * dt);
 
-
-                //Collision
+                // Collision
                 if (ball2.getGlobalBounds().findIntersection(can.getGlobalBounds()))
                 {
-                    //Bounce
+                    // Bounce
 
-                    if (!game.hasHit) {
+                    if (!game.hasHit)
+                    {
                         /*std::fstream hit_data;
                         hit_data.open("../assets/data/hit_x_y.txt", std::ios::out | std::ios::app);
                         hit_data << std::abs(game.initialVelocity.x) << ' ' << std::abs(game.initialVelocity.y) << "\n";
@@ -290,56 +361,20 @@ int main() {
                         if (sound.getStatus() != sf::Sound::Status::Playing)
                         {
                             sound.play();
-
                         }
                         game.hasHit = true;
                     }
-                    
                 }
 
-                //Reset after ground
-                if (ball2.getPosition().y > 600.f) {
+                // Reset after ground
+                if (ball2.getPosition().y > 600.f)
+                {
                     game.isFlying = false;
-                    game.velocity = { 0.f, 0.f };
-                    ball2.setPosition({ 100.0f, game.ball_y });
+                    game.velocity = {0.f, 0.f};
+                    ball2.setPosition({100.0f, game.ball_y});
                     game.turn = false;
                 }
-
             }
         }
     }
-
-    // ==== DRAW ====
-    window.clear(sf::Color::Black);
-    window.setView(view);
-    window.draw(logicalBackground);
-
-    if (currentState == GameState::Menu) {
-        playButton.draw(window);
-        exitButton.draw(window);
-    }
-    else if (currentState == GameState::Game) {
-        window.draw(ball);
-        window.draw(can);
-        window.draw(ball2);
-
-        if (!game.isFlying && (game.up > 0.0f || game.left > 0.0f)) {
-            if (game.up > 0.0f) {
-                sf::RectangleShape powerBar(sf::Vector2f(10.f, -game.up / 10.f));
-                powerBar.setFillColor(sf::Color::Red);
-                powerBar.setPosition(ball.getPosition() );
-                window.draw(powerBar);
-            }
-            if (game.left > 0.0f) {
-                sf::RectangleShape powerBar(sf::Vector2f(-game.left / 10.f, 10.f));
-                powerBar.setFillColor(sf::Color::Red);
-                powerBar.setPosition(ball.getPosition() );
-                window.draw(powerBar);
-            }
-        }
-    }
-    window.display();
-    }
-
-
 }

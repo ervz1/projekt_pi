@@ -30,15 +30,28 @@ struct GameStart {
 
 void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, float dt, sf::Sound &sound);
 
-void bounce(sf::CircleShape &ball2, sf::CircleShape &can, GameStart &game, sf::Sound &sound);
+void odbicie(sf::CircleShape &ball, float pozycja_x, GameStart &game, float dt, sf::CircleShape &can, sf::Sound &sound);
+
+void rzutBot(sf::CircleShape &can, sf::CircleShape &ball2, float gravity, GameStart &game);
+
+void rzutGracz(GameStart &game, float ramp_up);
+
+void bounce(sf::CircleShape &ball, sf::CircleShape &can, GameStart &game, sf::Sound &sound);
 
 void groundReset(sf::CircleShape &ball, GameStart &game, float ball_x);
 
 void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, sf::CircleShape &ball, sf::CircleShape &can, sf::CircleShape &ball2, GameStart &game);
 
+void drawBars(GameStart &game, sf::CircleShape &ball, sf::RenderWindow &window);
+
+void drawPowerbar(GameStart &game, sf::CircleShape &ball, sf::RenderWindow &window, float direction_up, float direction_left);
+
+void handleMenu(const std::__1::optional<sf::Event> &event, Button &playButton, sf::Vector2f &mousePos, GameState &currentState, Button &exitButton, sf::RenderWindow &window);
+
+void eventLoop(const std::__1::optional<sf::Event> &event, sf::RenderWindow &window, sf::View &view, GameState &currentState, Button &playButton, sf::Vector2f &mousePos, Button &exitButton);
+
 int main()
 {
-
     // SETUP
     GameStart game;
 
@@ -62,7 +75,7 @@ int main()
     if (!buffer.loadFromFile("assets/music/clank.mp3")) return -1;
     
     sf::Sound sound(buffer);
-
+    
     // Przyciski 
     sf::Clock keyTimer;
     Button playButton({ 200.f, 60.f }, { 300.f, 200.f }, sf::Color(50, 50, 50), "START", font, 30);
@@ -89,64 +102,30 @@ int main()
     // fizyka i czas
     float gravity = 980.f;
     sf::Clock clock;
-    
-    // =========================================
 
-    // 1. czas + mysz
-    // 2. event loop 
-    // 3. logika gry
-    // 4. rysowanie
-
-    
+    // main loop
     while (window.isOpen()) {
-    // ==== CZAS + MYSZ ====
 
-    float dt = clock.restart().asSeconds();
+        // 0. czas + mysz
+        float dt = clock.restart().asSeconds();
 
-    sf::Vector2i mousePosI = sf::Mouse::getPosition(window);
-    sf::Vector2f mousePos = window.mapPixelToCoords(mousePosI, view);
-    float ramp_up = 250.f * dt * 2;
+        sf::Vector2i mousePosI = sf::Mouse::getPosition(window);
+        sf::Vector2f mousePos = window.mapPixelToCoords(mousePosI, view);
+        float ramp_up = 250.f * dt * 2;
 
-
-        // ==== EVENT LOOP ====
-
-        while (const std::optional event = window.pollEvent()) {
+        // 1. event loop 
+        while (const std::optional event = window.pollEvent()) 
+            eventLoop(event, window, view, currentState, playButton, mousePos, exitButton); 
             
-            // 2.1 zamknięcie
-            if (event->is<sf::Event::Closed>())
-                window.close();
-
-            // 2.2 resize okna    
-            else if (const auto* resized = event->getIf<sf::Event::Resized>()) {
-                updateViewViewport(window, view);
-                view.setSize(mainWin);
-                view.setCenter({ mainWin.x / 2.f, mainWin.y / 2.f });
-                window.setView(view);
-            }
-
-            // 2.3 kliniecia (menu)
-            else if (currentState == GameState::Menu) {
-                if (const auto* mouseEvent = event->getIf<sf::Event::MouseButtonPressed>()) {
-                    if (mouseEvent->button == sf::Mouse::Button::Left) {
-                        if (playButton.isMouseOver(mousePos))
-                            currentState = GameState::Game;
-                        if (exitButton.isMouseOver(mousePos))
-                            window.close();
-                    }
-                }
-            }
-        }
-        
-        // ==== LOGIKA ====
+        // 2. logika gry
         logic(currentState, game, ball, can, ramp_up, ball2, gravity, dt, sound);
 
-        // ==== DRAW ====
-
+        // 3. rysowanie
         /* RenderWindow window, x
         View view 
         RectangleShape logicalBackground
         GameState currentState x
-    
+
         CircleShape ball x
         CircleShape ball2 x 
         CircleShape can x
@@ -161,49 +140,55 @@ int main()
         drawGame(currentState, playButton, window, exitButton, ball, can, ball2, game);
         window.display();
         }
+}
+
+// 1. event loop 
+// =====================================================================================================================
+
+void eventLoop(const std::__1::optional<sf::Event> &event, sf::RenderWindow &window, sf::View &view, GameState &currentState, Button &playButton, sf::Vector2f &mousePos, Button &exitButton){
+
+    // 1.1 zamknięcie
+    if (event->is<sf::Event::Closed>())
+        window.close();
+
+    // 1.2 resize okna
+    else if (const auto *resized = event->getIf<sf::Event::Resized>())
+    {
+        updateViewViewport(window, view);
+        view.setSize(mainWin);
+        view.setCenter({mainWin.x / 2.f, mainWin.y / 2.f});
+        window.setView(view);
     }
 
-void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, sf::CircleShape &ball, sf::CircleShape &can, sf::CircleShape &ball2, GameStart &game)
+    // 1.3 menu
+    else if (currentState == GameState::Menu)
+    {
+        handleMenu(event, playButton, mousePos, currentState, exitButton, window);
+    }
+}
+
+void handleMenu(const std::__1::optional<sf::Event> &event, Button &playButton, sf::Vector2f &mousePos, GameState &currentState, Button &exitButton, sf::RenderWindow &window)
 {
-    if (currentState == GameState::Menu)
+    if (const auto *mouseEvent = event->getIf<sf::Event::MouseButtonPressed>())
     {
-        playButton.draw(window);
-        exitButton.draw(window);
-    }
-    else if (currentState == GameState::Game)
-    {
-        window.draw(ball);
-        window.draw(can);
-        window.draw(ball2);
-
-        if (!game.isFlying && (game.up > 0.0f || game.left > 0.0f))
+        if (mouseEvent->button == sf::Mouse::Button::Left)
         {
-            if (game.up > 0.0f)
-            {
-                sf::RectangleShape powerBar(sf::Vector2f(10.f, -game.up / 10.f));
-                powerBar.setFillColor(sf::Color::Red);
-                powerBar.setPosition(ball.getPosition());
-                window.draw(powerBar);
-            }
-            if (game.left > 0.0f)
-            {
-                sf::RectangleShape powerBar(sf::Vector2f(-game.left / 10.f, 10.f));
-                powerBar.setFillColor(sf::Color::Red);
-                powerBar.setPosition(ball.getPosition());
-                window.draw(powerBar);
-            }
+            if (playButton.isMouseOver(mousePos))
+                currentState = GameState::Game;
+            if (exitButton.isMouseOver(mousePos))
+                window.close();
         }
     }
 }
 
-void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, float dt, sf::Sound &sound)
-{
+// 2. logika gry
+// =====================================================================================================================
+
+void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, float dt, sf::Sound &sound){
     if (currentState == GameState::Game)
     {
-
         // 3.1 Reset rozgrywki
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Escape))
-        {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Escape)){
             currentState = GameState::Menu;
             game = GameStart();
             ball.setPosition({game.ball_x, game.ball_y});
@@ -212,109 +197,117 @@ void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::
 
         // Charge player / AI
         // 3.2 Lot piłki 
-        if (!game.isFlying)
-        { // isFlying, turn - bool
+        if (!game.isFlying){
+            // Ruch p
             if (!game.turn)
-            {
-                bool chargingUp = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Up);
-                bool chargingLeft = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Left);
+                rzutGracz(game, ramp_up);
 
-                if (chargingUp || chargingLeft)
-                {
-                    game.isCharging = true;
-                    // Charging until max
-                    if (chargingUp)
-                        game.up += ramp_up;
-                    if (chargingLeft)
-                        game.left += ramp_up;
-
-                    // If charged to max:
-
-                    // Cap at max
-
-                    /*if (game.up > game.maxCharge) game.up = game.maxCharge;
-                    if (game.left > game.maxCharge) game.left = game.maxCharge;*/
-
-                    // Reset bar
-                    if (game.up > game.maxCharge)
-                        game.up = 0.0f;
-                    if (game.left > game.maxCharge)
-                        game.left = 0.0f;
-                }
-                // Throw
-                else if (game.isCharging)
-                {
-                    game.isCharging = false;
-                    game.isFlying = true;
-                    game.velocity = sf::Vector2f(-game.left, -game.up);
-                    game.initialVelocity = game.velocity;
-                    game.hasHit = false;
-                    game.up = 0.0f;
-                    game.left = 0.0f;
-                }
-            }
-            else if (game.turn)
-            {
-                std::random_device rd;
-                std::mt19937 gen(rd());
-                std::uniform_real_distribution<> dis(185.0f, 800.0f);
-                std::uniform_real_distribution<> dis2(-130.0f, 130.0f);
-                float random_x = dis(gen);
-
-                // Flight trajectory math
-                //  t = Distance/Vx
-                // Height = (Vy​*t)−(1/2​*Gravity*t^2)
-                // Vy = ((Gravity*Distance) / (2*Vx)) + (Height * Vx / Distance)
-
-                // Distance ball2 from can
-
-                // x axis
-                float distance = std::abs(can.getPosition().x - ball2.getPosition().x);
-
-                // y axis
-                float height = can.getPosition().y - ball2.getPosition().y;
-
-                // Velocityx * Velocityy = gravity*distance / 2
-                float physicsConstant = (gravity * distance) / 2.0f;
-
-                // Veloicttyy = gravity * distance /2 / velocityx - ((height * random_x)/ distance) (- because y axis in sfml upside down)
-                float random_y = (physicsConstant / random_x) - ((height * random_x) / distance);
-
-                std::cout << random_x << ' ' << random_y << std::endl;
-
-                // Margin of error (0 = enemy always hits)
-                // float error = dis2(gen);
-                float error = 0.0f;
-                game.velocity = sf::Vector2f(random_x, -(error + random_y));
-
-                // game.velocity = sf::Vector2f(687.352, -175.465);
-                game.initialVelocity = game.velocity;
-                game.hasHit = false;
-
-                game.isFlying = true;
-            }
+            else
+                rzutBot(can, ball2, gravity, game);
         }
         
-        // =============================================
         // 3.3 Odbicie piłki
-        else {
-            // Ruch puszki
+        else{
             game.velocity.y += gravity * dt;
-
             // Rzut gracza
-            if (!game.turn){
-                ball.move(game.velocity * dt); // ruch puszki
-                bounce(ball, can, game, sound); // odbicie
-                groundReset(ball, game, game.ball_x); // reset po odbiciu
-            }
+            if (!game.turn)
+                odbicie(ball, game.ball_x, game, dt, can, sound);
 
             // Rzut bota
-            else {
-                ball2.move(game.velocity * dt); // ruch puszki
-                bounce(ball2, can, game, sound); // odbicie
-                groundReset(ball2, game, game.bot_ball_x); // reset po odbiciu
-            }
+            else 
+                odbicie(ball2, game.bot_ball_x, game, dt, can, sound);
         }
+    }
+}
+
+void odbicie(sf::CircleShape &ball, float pozycja_x, GameStart &game, float dt, sf::CircleShape &can, sf::Sound &sound)
+{
+    ball.move(game.velocity * dt);        // ruch puszki
+    bounce(ball, can, game, sound);       // odbicie
+    groundReset(ball, game, pozycja_x); // reset po odbiciu
+}
+
+void rzutBot(sf::CircleShape &can, sf::CircleShape &ball2, float gravity, GameStart &game)
+{
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(185.0f, 800.0f);
+    std::uniform_real_distribution<> dis2(-130.0f, 130.0f);
+    float random_x = dis(gen);
+
+    // Flight trajectory math
+    //  t = Distance/Vx
+    // Height = (Vy​*t)−(1/2​*Gravity*t^2)
+    // Vy = ((Gravity*Distance) / (2*Vx)) + (Height * Vx / Distance)
+
+    // Distance ball2 from can
+
+    // x axis
+    float distance = std::abs(can.getPosition().x - ball2.getPosition().x);
+
+    // y axis
+    float height = can.getPosition().y - ball2.getPosition().y;
+
+    // Velocityx * Velocityy = gravity*distance / 2
+    float physicsConstant = (gravity * distance) / 2.0f;
+
+    // Veloicty = gravity * distance /2 / velocityx - ((height * random_x)/ distance) (- because y axis in sfml upside down)
+    float random_y = (physicsConstant / random_x) - ((height * random_x) / distance);
+
+    std::cout << random_x << ' ' << random_y << std::endl;
+
+    // Margin of error (0 = enemy always hits)
+    // float error = dis2(gen);
+    float error = 0.0f;
+    game.velocity = sf::Vector2f(random_x, -(error + random_y));
+
+    // game.velocity = sf::Vector2f(687.352, -175.465);
+    game.initialVelocity = game.velocity;
+    game.hasHit = false;
+
+    game.isFlying = true;
+}
+
+void rzutGracz(GameStart &game, float ramp_up)
+{
+
+    bool chargingUp = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Up);
+    bool chargingLeft = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Left);
+
+    // Ładowanie do rzutu
+    if (chargingUp || chargingLeft)
+    {
+        game.isCharging = true;
+        // Charging until max
+        if (chargingUp)
+            game.up += ramp_up;
+        if (chargingLeft)
+            game.left += ramp_up;
+
+        // If charged to max:
+
+        // Cap at max
+
+        /*if (game.up > game.maxCharge) game.up = game.maxCharge;
+        if (game.left > game.maxCharge) game.left = game.maxCharge;*/
+
+        // Reset bar
+        if (game.up > game.maxCharge)
+            game.up = 0.0f;
+        if (game.left > game.maxCharge)
+            game.left = 0.0f;
+    }
+    // Rzut
+    else if (game.isCharging)
+    {
+        game.isCharging = false;
+        game.isFlying = true;
+        game.velocity = sf::Vector2f(-game.left, -game.up);
+        game.initialVelocity = game.velocity;
+        game.hasHit = false;
+        game.up = 0.0f;
+        game.left = 0.0f;
     }
 }
 
@@ -351,4 +344,45 @@ void groundReset(sf::CircleShape &ball, GameStart &game, float ball_x)
         game.turn = !game.turn;
     }
 
+}
+
+// 3. rysowanie
+// =====================================================================================================================
+
+void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, sf::CircleShape &ball, sf::CircleShape &can, sf::CircleShape &ball2, GameStart &game)
+{
+    if (currentState == GameState::Menu)
+    {
+        playButton.draw(window);
+        exitButton.draw(window);
+    }
+    else if (currentState == GameState::Game)
+    {
+        window.draw(ball);
+        window.draw(can);
+        window.draw(ball2);
+
+        drawBars(game, ball, window);
+    }
+}
+
+void drawBars(GameStart &game, sf::CircleShape &ball, sf::RenderWindow &window)
+{
+    if (!game.isFlying && (game.up > 0.0f || game.left > 0.0f))
+    {
+        if (game.up > 0.0f)
+        {
+            sf::RectangleShape powerBar(sf::Vector2f(10.f, -game.up / 10.f));
+            powerBar.setFillColor(sf::Color::Red);
+            powerBar.setPosition(ball.getPosition());
+            window.draw(powerBar);
+        }
+        if (game.left > 0.0f)
+        {
+            sf::RectangleShape powerBar(sf::Vector2f(-game.left / 10.f, 10.f));
+            powerBar.setFillColor(sf::Color::Red);
+            powerBar.setPosition(ball.getPosition());
+            window.draw(powerBar);
+        }
+    }
 }

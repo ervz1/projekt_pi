@@ -20,6 +20,7 @@ struct GameStart {
     bool isCharging = false;
     bool isFlying = false;
     float maxCharge = 800.0f;
+    float bot_ball_x = 100.f;
     float ball_x = 700.f;
     float ball_y = 300.f;
     bool turn = false;
@@ -28,6 +29,10 @@ struct GameStart {
 };
 
 void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, float dt, sf::Sound &sound);
+
+void bounce(sf::CircleShape &ball2, sf::CircleShape &can, GameStart &game, sf::Sound &sound);
+
+void groundReset(sf::CircleShape &ball, GameStart &game, float ball_x);
 
 void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, sf::CircleShape &ball, sf::CircleShape &can, sf::CircleShape &ball2, GameStart &game);
 
@@ -79,7 +84,7 @@ int main()
 
     sf::CircleShape ball2(10.f);
     ball2.setFillColor(sf::Color::White);
-    ball2.setPosition({  100.0f, game.ball_y });
+    ball2.setPosition({ game.bot_ball_x, game.ball_y });
 
     // fizyka i czas
     float gravity = 980.f;
@@ -96,69 +101,67 @@ int main()
     while (window.isOpen()) {
     // ==== CZAS + MYSZ ====
 
-    // 1.1 czas
     float dt = clock.restart().asSeconds();
 
-    // 1.2 mysz
     sf::Vector2i mousePosI = sf::Mouse::getPosition(window);
     sf::Vector2f mousePos = window.mapPixelToCoords(mousePosI, view);
     float ramp_up = 250.f * dt * 2;
 
 
-    // ==== EVENT LOOP ====
+        // ==== EVENT LOOP ====
 
-    while (const std::optional event = window.pollEvent()) {
-        
-        // 2.1 zamknięcie
-        if (event->is<sf::Event::Closed>())
-            window.close();
+        while (const std::optional event = window.pollEvent()) {
+            
+            // 2.1 zamknięcie
+            if (event->is<sf::Event::Closed>())
+                window.close();
 
-        // 2.2 resize okna    
-        else if (const auto* resized = event->getIf<sf::Event::Resized>()) {
-            updateViewViewport(window, view);
-            view.setSize(mainWin);
-            view.setCenter({ mainWin.x / 2.f, mainWin.y / 2.f });
-            window.setView(view);
-        }
+            // 2.2 resize okna    
+            else if (const auto* resized = event->getIf<sf::Event::Resized>()) {
+                updateViewViewport(window, view);
+                view.setSize(mainWin);
+                view.setCenter({ mainWin.x / 2.f, mainWin.y / 2.f });
+                window.setView(view);
+            }
 
-        // 2.3 kliniecia (menu)
-        else if (currentState == GameState::Menu) {
-            if (const auto* mouseEvent = event->getIf<sf::Event::MouseButtonPressed>()) {
-                if (mouseEvent->button == sf::Mouse::Button::Left) {
-                    if (playButton.isMouseOver(mousePos))
-                        currentState = GameState::Game;
-                    if (exitButton.isMouseOver(mousePos))
-                        window.close();
+            // 2.3 kliniecia (menu)
+            else if (currentState == GameState::Menu) {
+                if (const auto* mouseEvent = event->getIf<sf::Event::MouseButtonPressed>()) {
+                    if (mouseEvent->button == sf::Mouse::Button::Left) {
+                        if (playButton.isMouseOver(mousePos))
+                            currentState = GameState::Game;
+                        if (exitButton.isMouseOver(mousePos))
+                            window.close();
+                    }
                 }
             }
         }
-    }
+        
+        // ==== LOGIKA ====
+        logic(currentState, game, ball, can, ramp_up, ball2, gravity, dt, sound);
+
+        // ==== DRAW ====
+
+        /* RenderWindow window, x
+        View view 
+        RectangleShape logicalBackground
+        GameState currentState x
     
-    // ==== LOGIKA ====
-    logic(currentState, game, ball, can, ramp_up, ball2, gravity, dt, sound);
+        CircleShape ball x
+        CircleShape ball2 x 
+        CircleShape can x
+        
+        GameStart game 
+        RectangleShape powerBar */
 
-    // ==== DRAW ====
+        window.clear(sf::Color::Black);
+        window.setView(view);
+        window.draw(logicalBackground);
 
-    /* RenderWindow window, x
-    View view 
-    RectangleShape logicalBackground
-    GameState currentState x
- 
-    CircleShape ball x
-    CircleShape ball2 x 
-    CircleShape can x
-    
-    GameStart game 
-    RectangleShape powerBar */
-
-    window.clear(sf::Color::Black);
-    window.setView(view);
-    window.draw(logicalBackground);
-
-    drawGame(currentState, playButton, window, exitButton, ball, can, ball2, game);
-    window.display();
+        drawGame(currentState, playButton, window, exitButton, ball, can, ball2, game);
+        window.display();
+        }
     }
-}
 
 void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, sf::CircleShape &ball, sf::CircleShape &can, sf::CircleShape &ball2, GameStart &game)
 {
@@ -207,13 +210,12 @@ void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::
             can.setFillColor(sf::Color::Yellow);
         }
 
-        // 3.2 Charge player / AI
-
+        // Charge player / AI
+        // 3.2 Lot piłki 
         if (!game.isFlying)
         { // isFlying, turn - bool
             if (!game.turn)
             {
-
                 bool chargingUp = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Up);
                 bool chargingLeft = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Left);
 
@@ -292,89 +294,61 @@ void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::
                 game.isFlying = true;
             }
         }
-
-        else
-        {
-            // Add gravity to y axis of velocity
+        
+        // =============================================
+        // 3.3 Odbicie piłki
+        else {
+            // Ruch puszki
             game.velocity.y += gravity * dt;
-            if (!game.turn)
-            {
 
-                // Move based on velocity
-                ball.move(game.velocity * dt);
-
-                // Collision
-                if (ball.getGlobalBounds().findIntersection(can.getGlobalBounds()))
-                {
-                    // Bounce
-                    if (!game.hasHit)
-                    {
-
-                        // Adding data, save velocity if hit
-
-                        /*std::fstream hit_data;
-                        hit_data.open("../assets/data/hit_x_y.txt", std::ios::out | std::ios::app);
-                        hit_data << std::abs(game.initialVelocity.x) << ' ' << std::abs(game.initialVelocity.y) << "\n";
-                        hit_data.close();*/
-
-                        game.velocity.x = -game.velocity.x * 1.0f;
-                        game.velocity.y = -game.velocity.y * 1.0f;
-                        can.setFillColor(sf::Color::Magenta);
-                        if (sound.getStatus() != sf::Sound::Status::Playing)
-                        {
-                            sound.play();
-                        }
-                        game.hasHit = true;
-                    }
-                }
-
-                // Reset after ground
-                if (ball.getPosition().y > 600.f)
-                {
-                    game.isFlying = false;
-                    game.velocity = {0.f, 0.f};
-                    ball.setPosition({game.ball_x, game.ball_y});
-                    game.turn = true;
-                }
+            // Rzut gracza
+            if (!game.turn){
+                ball.move(game.velocity * dt); // ruch puszki
+                bounce(ball, can, game, sound); // odbicie
+                groundReset(ball, game, game.ball_x); // reset po odbiciu
             }
-            else if (game.turn)
-            {
 
-                // Move based on velocity
-                ball2.move(game.velocity * dt);
-
-                // Collision
-                if (ball2.getGlobalBounds().findIntersection(can.getGlobalBounds()))
-                {
-                    // Bounce
-
-                    if (!game.hasHit)
-                    {
-                        /*std::fstream hit_data;
-                        hit_data.open("../assets/data/hit_x_y.txt", std::ios::out | std::ios::app);
-                        hit_data << std::abs(game.initialVelocity.x) << ' ' << std::abs(game.initialVelocity.y) << "\n";
-                        hit_data.close();*/
-
-                        game.velocity.x = -game.velocity.x * 1.0f;
-                        game.velocity.y = -game.velocity.y * 1.0f;
-                        can.setFillColor(sf::Color::Magenta);
-                        if (sound.getStatus() != sf::Sound::Status::Playing)
-                        {
-                            sound.play();
-                        }
-                        game.hasHit = true;
-                    }
-                }
-
-                // Reset after ground
-                if (ball2.getPosition().y > 600.f)
-                {
-                    game.isFlying = false;
-                    game.velocity = {0.f, 0.f};
-                    ball2.setPosition({100.0f, game.ball_y});
-                    game.turn = false;
-                }
+            // Rzut bota
+            else {
+                ball2.move(game.velocity * dt); // ruch puszki
+                bounce(ball2, can, game, sound); // odbicie
+                groundReset(ball2, game, game.bot_ball_x); // reset po odbiciu
             }
         }
     }
+}
+
+void bounce(sf::CircleShape &ball, sf::CircleShape &can, GameStart &game, sf::Sound &sound)
+{
+    if (ball.getGlobalBounds().findIntersection(can.getGlobalBounds()))
+    {
+        if (!game.hasHit)
+        {
+            /*std::fstream hit_data;
+            hit_data.open("../assets/data/hit_x_y.txt", std::ios::out | std::ios::app);
+            hit_data << std::abs(game.initialVelocity.x) << ' ' << std::abs(game.initialVelocity.y) << "\n";
+            hit_data.close();*/
+
+            game.velocity.x = -game.velocity.x * 1.0f;
+            game.velocity.y = -game.velocity.y * 1.0f;
+            can.setFillColor(sf::Color::Magenta);
+            if (sound.getStatus() != sf::Sound::Status::Playing)
+            {
+                sound.play();
+            }
+            game.hasHit = true;
+        }
+    }
+}
+
+void groundReset(sf::CircleShape &ball, GameStart &game, float ball_x)
+{
+    if (ball.getPosition().y > 600.f)
+    {
+        game.isFlying = false;
+        game.velocity = {0.f, 0.f};
+        ball.setPosition({ball_x, game.ball_y});
+        game.turn = !game.turn;
+    }
+
 }

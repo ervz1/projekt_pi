@@ -1,5 +1,8 @@
 #include <SFML/Graphics.hpp>
 #include "globals.hpp"
+#include <iostream>
+#pragma once
+#include <cmath>
 // tu wszystkie funkcje i klasy
 static void updateViewViewport(const sf::RenderWindow& window, sf::View& view) {
     float winW = static_cast<float>(window.getSize().x);
@@ -39,4 +42,36 @@ public:
 private:
     sf::RectangleShape shape;
     sf::Text text;
+};
+
+
+class QTEbar : public sf::Drawable, public sf::Transformable{
+
+private:
+    std::vector<sf::RectangleShape> m_rects;
+
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override {
+        states.transform *= getTransform();
+        for (const auto& rect : m_rects) {
+            target.draw(rect, states);
+        }
+    }
+public:
+    QTEbar(float width, float height, float spacing) {
+        const sf::Color colors[] = {
+            sf::Color::Color(255,0,0),
+            sf::Color::Color(237, 214, 34),
+            sf::Color::Color(0,150,0),
+            sf::Color::Color(237, 214, 34),
+            sf::Color::Color(255,0,0)
+        };
+
+        for (int i = 0; i < 5; i++) {
+            sf::RectangleShape rect(sf::Vector2f(width, height));
+            rect.setFillColor(colors[i]);
+            float yPos = (height + spacing) * static_cast<float>(i);
+            rect.setPosition(sf::Vector2f(0.f, yPos));
+            m_rects.push_back(rect);
+        }
+    }
 };

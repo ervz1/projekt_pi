@@ -59,7 +59,6 @@
 | --- | --- |
 | Rzut puszką przez komputer | Silnik losuje parametry rzutu |
 | Nietrafienie puszki | Brak akcji |
-| Przyznanie punktu dla gracza | Dodanie punktu dla gracza |
 | Zakończenie tury przeciwnika | -- |
 
 ##

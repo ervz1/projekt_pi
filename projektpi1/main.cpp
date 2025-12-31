@@ -46,9 +46,9 @@ void drawBars(GameStart &game, sf::CircleShape &ball, sf::RenderWindow &window);
 
 void drawPowerbar(GameStart &game, sf::CircleShape &ball, sf::RenderWindow &window, float direction_up, float direction_left);
 
-void handleMenu(const std::__1::optional<sf::Event> &event, Button &playButton, sf::Vector2f &mousePos, GameState &currentState, Button &exitButton, sf::RenderWindow &window);
+void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::Vector2f &mousePos, GameState &currentState, Button &exitButton, sf::RenderWindow &window);
 
-void eventLoop(const std::__1::optional<sf::Event> &event, sf::RenderWindow &window, sf::View &view, GameState &currentState, Button &playButton, sf::Vector2f &mousePos, Button &exitButton);
+void eventLoop(const std::optional<sf::Event> &event, sf::RenderWindow &window, sf::View &view, GameState &currentState, Button &playButton, sf::Vector2f &mousePos, Button &exitButton);
 
 int main()
 {
@@ -145,7 +145,7 @@ int main()
 // 1. event loop 
 // =====================================================================================================================
 
-void eventLoop(const std::__1::optional<sf::Event> &event, sf::RenderWindow &window, sf::View &view, GameState &currentState, Button &playButton, sf::Vector2f &mousePos, Button &exitButton){
+void eventLoop(const std::optional<sf::Event> &event, sf::RenderWindow &window, sf::View &view, GameState &currentState, Button &playButton, sf::Vector2f &mousePos, Button &exitButton){
 
     // 1.1 zamknięcie
     if (event->is<sf::Event::Closed>())
@@ -167,7 +167,7 @@ void eventLoop(const std::__1::optional<sf::Event> &event, sf::RenderWindow &win
     }
 }
 
-void handleMenu(const std::__1::optional<sf::Event> &event, Button &playButton, sf::Vector2f &mousePos, GameState &currentState, Button &exitButton, sf::RenderWindow &window)
+void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::Vector2f &mousePos, GameState &currentState, Button &exitButton, sf::RenderWindow &window)
 {
     if (const auto *mouseEvent = event->getIf<sf::Event::MouseButtonPressed>())
     {
@@ -195,7 +195,7 @@ void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::
             can.setFillColor(sf::Color::Yellow);
         }
 
-        // Charge player / AI
+        // Charge player / bot
         // 3.2 Lot piłki 
         if (!game.isFlying){
             // Ruch p
@@ -257,10 +257,11 @@ void rzutBot(sf::CircleShape &can, sf::CircleShape &ball2, float gravity, GameSt
 
     std::cout << random_x << ' ' << random_y << std::endl;
 
-    // Margin of error (0 = enemy always hits)
-    // float error = dis2(gen);
-    float error = 0.0f;
-    game.velocity = sf::Vector2f(random_x, -(error + random_y));
+    // error (0 = enemy always hits)
+    int error = 300;
+    srand(time(NULL));
+    float margin = rand() % (2*error) - error;
+    game.velocity = sf::Vector2f(random_x, -(margin + random_y));
 
     // game.velocity = sf::Vector2f(687.352, -175.465);
     game.initialVelocity = game.velocity;

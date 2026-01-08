@@ -59,19 +59,46 @@ private:
 public:
     QTEbar(float width, float height, float spacing) {
         const sf::Color colors[] = {
-            sf::Color::Color(255,0,0),
-            sf::Color::Color(237, 214, 34),
+            //sf::Color::Color(255,0,0),
+            //sf::Color::Color(237, 214, 34),
             sf::Color::Color(0,150,0),
             sf::Color::Color(237, 214, 34),
             sf::Color::Color(255,0,0)
         };
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 3; i++) {
             sf::RectangleShape rect(sf::Vector2f(width, height));
             rect.setFillColor(colors[i]);
             float yPos = (height + spacing) * static_cast<float>(i);
             rect.setPosition(sf::Vector2f(0.f, yPos));
             m_rects.push_back(rect);
         }
+    }
+};
+
+
+class greyBar : public sf::Drawable, public sf::Transformable {
+
+private:
+    std::vector<sf::RectangleShape> m_rects;
+
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override {
+        states.transform *= getTransform();
+        for (const auto& rect : m_rects) {
+            target.draw(rect, states);
+        }
+    }
+public:
+    greyBar(float width, float height, float spacing) {
+        
+        
+
+        //for (int i = 0; i < 3; i++) {
+            sf::RectangleShape rect(sf::Vector2f(width, height));
+            rect.setFillColor(sf::Color::Color(128, 128, 128));
+            float yPos = (height + spacing);
+            rect.setPosition(sf::Vector2f(0.f, yPos));
+            m_rects.push_back(rect);
+        //}
     }
 };

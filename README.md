@@ -66,6 +66,7 @@
 # 3. Dodatkowe założenia:
 ### 1. W trakcie picia piwa &lt;_przez gracza_&gt; mozna zrobic wypicie więcej niż jednego piwa.
 * *ervz: ciężko jest wypić jedno piwo w pare sekund*
+* * idk ja tam swego czasu potrafilem *
 ### 2. Mozna wybrać poziom trudności bota - bot moze np:  
 * czesciej trafiac
 * szybciej biec po ustawienie swojej puszki

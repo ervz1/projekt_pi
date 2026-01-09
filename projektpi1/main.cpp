@@ -14,6 +14,8 @@
 sf::Vector2f mainWin = { 800.0f, 600.0f };
 void updateViewViewport(const sf::RenderWindow&, sf::View&);
 enum class GameState { Menu, Game, GameMenu };
+std::string buttText = "../assets/img/button.png";
+
 
 struct GameStart {
     sf::Vector2f velocity = { 0.f, 0.f };
@@ -89,13 +91,18 @@ int main()
     
     // Przyciski 
     sf::Clock keyTimer;
-    Button playButton({ 200.f, 60.f }, { 300.f, 200.f }, sf::Color(50, 50, 50), "START", font, 30);
-    Button exitButton({ 200.f, 60.f }, { 300.f, 300.f }, sf::Color(50, 50, 50), "WYJSCIE", font, 30);
+    Button playButton({ 254.f, 104.f }, { 273.f, 260.f }, sf::Color(96, 178, 37), sf::Color(109, 204, 42), "START", font, 30, buttText);
+    Button exitButton({ 254.f, 104.f }, { 273.f, 400.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), "WYJSCIE", font, 30, buttText);
 
     // Tło
+    sf::Texture mainMenuBG;
+    if (!mainMenuBG.loadFromFile("../assets/img/mainmenu.png")) return -1;
+    sf::Texture gameBG;
+    if (!gameBG.loadFromFile("../assets/img/gamebg.png")) return -1;
+
     sf::RectangleShape logicalBackground(mainWin);
     logicalBackground.setPosition({ 0.f, 0.f });
-    logicalBackground.setFillColor(sf::Color(0, 0, 255));
+    logicalBackground.setTexture(&mainMenuBG);
 
     // Obiekty - puszki
     sf::CircleShape can(15.f);
@@ -160,6 +167,10 @@ int main()
     // main loop
     while (window.isOpen()) {
 
+        if (currentState == GameState::Game) {
+            logicalBackground.setTexture(&gameBG);
+        }
+
         // 0. czas + mysz
         float dt = clock.restart().asSeconds();
 
@@ -223,6 +234,18 @@ void eventLoop(const std::optional<sf::Event> &event, sf::RenderWindow &window, 
 
 void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::Vector2f &mousePos, GameState &currentState, Button &exitButton, sf::RenderWindow &window)
 {
+    if (playButton.isMouseOver(mousePos)) {
+        playButton.hover();
+    }
+    else {
+        playButton.unhover();
+    }
+    if (exitButton.isMouseOver(mousePos)) {
+        exitButton.hover();
+    }
+    else {
+        exitButton.unhover();
+    }
     if (const auto *mouseEvent = event->getIf<sf::Event::MouseButtonPressed>())
     {
         if (mouseEvent->button == sf::Mouse::Button::Left)

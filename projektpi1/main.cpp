@@ -8,6 +8,8 @@
 #include <ctime>
 #include <random>
 #include <fstream>
+#include <chrono>
+#include <thread>
 
 sf::Vector2f mainWin = { 800.0f, 600.0f };
 void updateViewViewport(const sf::RenderWindow&, sf::View&);
@@ -24,19 +26,21 @@ struct GameStart {
     float maxCharge = 800.0f;
     float bot_ball_x = 100.f;
     float ball_x = 700.f;
-    float ball_y = 300.f;
+    float ball_y = 200.f;
     bool turn = false;
     bool hasHit = false;
     sf::Vector2f initialVelocity;
     int myDrink = 0;
+    int enemyDrink = 0;
     bool isSpaceActive = false;
 };
 
-void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, float dt, sf::Sound &sound, greyBar &visBar);
+void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, 
+    float dt, sf::Sound &sound, greyBar &visBar, int &level, sf::Text &levelDisplay, greyBar& visEnemyBar);
 
 void odbicie(sf::CircleShape &ball, float pozycja_x, GameStart &game, float dt, sf::CircleShape &can, sf::Sound &sound);
 
-void rzutBot(sf::CircleShape &can, sf::CircleShape &ball2, float gravity, GameStart &game);
+void rzutBot(sf::CircleShape &can, sf::CircleShape &ball2, float gravity, GameStart &game, int& level);
 
 void rzutGracz(GameStart &game, float ramp_up);
 
@@ -45,7 +49,7 @@ void bounce(sf::CircleShape &ball, sf::CircleShape &can, GameStart &game, sf::So
 void groundReset(sf::CircleShape &ball, GameStart &game, float ball_x);
 
 void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, sf::CircleShape &ball, sf::CircleShape &can, sf::CircleShape &ball2, GameStart &game, 
-    sf::Text &aim, sf::Text &move, sf::Text &drink, QTEbar &drinkBar, greyBar &visBar);
+    sf::Text &aim, sf::Text &move, sf::Text &drink, QTEbar &drinkBar, greyBar &visBar, sf::Text &levelDisplay, QTEbar& enemyBar, greyBar& visEnemyBar);
 
 void drawBars(GameStart &game, sf::CircleShape &ball, sf::RenderWindow &window);
 
@@ -56,6 +60,8 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
 void eventLoop(const std::optional<sf::Event> &event, sf::RenderWindow &window, sf::View &view, GameState &currentState, Button &playButton, sf::Vector2f &mousePos, Button &exitButton);
 
 void drinkCounter(GameStart& game, greyBar &visBar);
+
+void drinkCounterEnemy(GameStart& game, greyBar &visEnemyBar);
 
 int main()
 {
@@ -133,13 +139,30 @@ int main()
     QTEbar drinkBar(20.f, 50.f, 0.f);
     drinkBar.setPosition({ 650, 400 });
 
+    QTEbar enemyBar(20.f, 50.f, 0.f);
+    enemyBar.setPosition({ 150, 400 });
+
     greyBar visBar(30.f, 10.f, 0.f);
     visBar.setPosition({ 645, 540 });
+
+    greyBar visEnemyBar(30.f, 10.f, 0.f);
+    visEnemyBar.setPosition({ 145, 540 });
+
+
+    int level = 1;
+    //char levelChar = '1';
+    sf::Text levelDisplay(font, std::to_string(level));
+    levelDisplay.setCharacterSize(15);
+    levelDisplay.setStyle(sf::Text::Bold);
+    levelDisplay.setFillColor(sf::Color::Red);
+    levelDisplay.setPosition({ 300, 110 });
 
 
     // fizyka i czas
     float gravity = 980.f;
     sf::Clock clock;
+
+    
 
     // main loop
     while (window.isOpen()) {
@@ -160,7 +183,7 @@ int main()
             eventLoop(event, window, view, currentState, playButton, mousePos, exitButton); 
             
         // 2. logika gry
-        logic(currentState, game, ball, can, ramp_up, ball2, gravity, dt, sound, visBar);
+        logic(currentState, game, ball, can, ramp_up, ball2, gravity, dt, sound, visBar, level, levelDisplay, visEnemyBar);
 
         // 3. rysowanie
         /* RenderWindow window, x
@@ -179,7 +202,7 @@ int main()
         window.setView(view);
         window.draw(logicalBackground);
 
-        drawGame(currentState, playButton, window, exitButton, ball, can, ball2, game, aim, move, drink, drinkBar, visBar);
+        drawGame(currentState, playButton, window, exitButton, ball, can, ball2, game, aim, move, drink, drinkBar, visBar, levelDisplay, enemyBar, visEnemyBar);
         window.display();
         }
 }
@@ -238,7 +261,8 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
 // 2. logika gry
 // =====================================================================================================================
 
-void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, float dt, sf::Sound &sound, greyBar &visBar){
+void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, float dt, sf::Sound &sound, greyBar &visBar, 
+    int &level, sf::Text &levelDisplay, greyBar& visEnemyBar){
     if (currentState == GameState::Game)
     {
         // 3.1 Reset rozgrywki
@@ -257,7 +281,7 @@ void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::
                 rzutGracz(game, ramp_up);
 
             else
-                rzutBot(can, ball2, gravity, game);
+                rzutBot(can, ball2, gravity, game, level);
         }
         
         // 3.3 Odbicie piłki
@@ -267,14 +291,33 @@ void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::
             if (!game.turn) {
                 odbicie(ball, game.ball_x, game, dt, can, sound);
                 //"picie"
-                if(game.hasHit == true)
-                drinkCounter(game,visBar);
-                
+                if (game.hasHit == true && game.myDrink < 30)
+                    drinkCounter(game, visBar);
+                else if (game.myDrink == 30){
+                    
+                    can.setFillColor(sf::Color::Yellow);
+                    //game.myDrink = 0;
+                    visBar.setPosition({ 645, 540 });
+                    ball.setPosition({ game.ball_x, game.ball_y });
+                    level++;
+                    levelDisplay.setString(std::to_string(level));
+                    //std::cout << level << std::endl;
+                    game = GameStart();
+                    
+                    
+                }
             }
 
             // Rzut bota
             else 
                 odbicie(ball2, game.bot_ball_x, game, dt, can, sound);
+
+
+            //temp solution should be based on time player pick up can 
+           /* if (game.turn && game.hasHit == true) {
+                drinkCounterEnemy(game, visEnemyBar);
+                game.hasHit = false;
+            }*/
         }
     }
 }
@@ -286,13 +329,25 @@ void odbicie(sf::CircleShape &ball, float pozycja_x, GameStart &game, float dt, 
     groundReset(ball, game, pozycja_x); // reset po odbiciu
 }
 
-void rzutBot(sf::CircleShape &can, sf::CircleShape &ball2, float gravity, GameStart &game)
+void rzutBot(sf::CircleShape &can, sf::CircleShape &ball2, float gravity, GameStart &game, int &level)
 {
 
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(185.0f, 800.0f);
-    std::uniform_real_distribution<> dis2(-130.0f, 130.0f);
+    float margin;
+
+    if (level < 7)
+    {
+        std::uniform_real_distribution<> dis2(-160.0f + (10 * level), 160.0f - (10 * level));
+        margin = dis2(gen);
+        
+    }
+    else {
+        std::uniform_real_distribution<> dis2(-100.0f , 100.0f );
+        margin = dis2(gen);
+    }
+
     float random_x = dis(gen);
 
     // Flight trajectory math
@@ -318,11 +373,11 @@ void rzutBot(sf::CircleShape &can, sf::CircleShape &ball2, float gravity, GameSt
 
     // error (0 = enemy always hits)
     //int error = 200;
-    srand(time(NULL));
+    //srand(time(NULL));
     //float margin = rand() % (2*error) - error;
-    float margin = dis2(gen);
+     
     game.velocity = sf::Vector2f(random_x, -(margin + random_y));
-
+    std::cout  << "margin" << margin<< std::endl;
     // game.velocity = sf::Vector2f(687.352, -175.465);
     game.initialVelocity = game.velocity;
     game.hasHit = false;
@@ -388,7 +443,7 @@ void bounce(sf::CircleShape &ball, sf::CircleShape &can, GameStart &game, sf::So
             can.setFillColor(sf::Color::Magenta);
             if (sound.getStatus() != sf::Sound::Status::Playing)
             {
-                sound.play();
+                //sound.play();
             }
 
             game.hasHit = true;
@@ -415,9 +470,20 @@ void drinkCounter(GameStart& game, greyBar &visBar) {
         
     }
     std::cout << game.myDrink << std::endl;
-    
-    
+}
 
+void drinkCounterEnemy(GameStart& game, greyBar& visEnemyBar) {
+
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::uniform_int_distribution<std::mt19937::result_type> dist(6, 10);
+
+    int moveCount = dist(rng);
+
+    for (int i = 0; i < moveCount; i++) {
+        visEnemyBar.move({ 0, -5.f });
+        //std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
 }
 
 void groundReset(sf::CircleShape &ball, GameStart &game, float ball_x)
@@ -438,7 +504,7 @@ void groundReset(sf::CircleShape &ball, GameStart &game, float ball_x)
 void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& window,
     Button& exitButton, sf::CircleShape& ball, sf::CircleShape& can,
     sf::CircleShape& ball2, GameStart& game,
-    sf::Text& aim, sf::Text& move, sf::Text& drink, QTEbar &drinkBar, greyBar &visBar)
+    sf::Text& aim, sf::Text& move, sf::Text& drink, QTEbar &drinkBar, greyBar &visBar, sf::Text &levelDisplay, QTEbar& enemyBar, greyBar& visEnemyBar)
 {
     if (currentState == GameState::Menu)
     {
@@ -455,7 +521,10 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
         window.draw(move);
         window.draw(drink);
         window.draw(drinkBar);
+        window.draw(enemyBar);
         window.draw(visBar);
+        window.draw(visEnemyBar);
+        window.draw(levelDisplay);
 
         drawBars(game, ball, window);
     }

@@ -291,10 +291,10 @@ void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::
 
 
             //temp solution should be based on time player pick up can 
-            if (game.turn && game.hasHit == true) {
+           /* if (game.turn && game.hasHit == true) {
                 drinkCounterEnemy(game, visEnemyBar);
                 game.hasHit = false;
-            }
+            }*/
         }
     }
 }

@@ -23,10 +23,18 @@ static void updateViewViewport(const sf::RenderWindow& window, sf::View& view) {
 
 class Button {
 public:
-    Button(const sf::Vector2f& size, const sf::Vector2f& position, const sf::Color& color, const std::string& textString, const sf::Font& font, unsigned int charSize)
-        : shape(size), text(font, textString, charSize) {
+    Button(const sf::Vector2f& size, const sf::Vector2f& position, const sf::Color& color, const sf::Color& hoverColor, const std::string& textString, const sf::Font& font, unsigned int charSize, const std::string& texture = "")
+        : shape(size), text(font, textString, charSize), baseColor(color), hoverColor(hoverColor){
         shape.setPosition(position);
-        shape.setFillColor(color);
+        if (!texture.empty() && b_texture.loadFromFile(texture)) {
+            // setTexture expects a pointer to a texture that remains valid
+            shape.setTexture(&b_texture);
+            shape.setFillColor(color);
+        }
+        else {
+            // fallback to a fill color when there's no texture or loading fails
+            shape.setFillColor(color);
+        }
         text.setPosition(sf::Vector2f(position.x + size.x / 2.0f - text.getLocalBounds().size.x / 2.0f, position.y + size.y / 2.0f - text.getLocalBounds().size.y / 2.0f - 5.0f));
     }
     void draw(sf::RenderWindow& window) {
@@ -36,13 +44,21 @@ public:
     bool isMouseOver(const sf::Vector2f& mousePos) {
         return shape.getGlobalBounds().contains(mousePos);
     }
-    void setFillColor(const sf::Color& color) {
-        shape.setFillColor(color);
+    void hover() {
+        shape.setFillColor(hoverColor);
+    }
+    void unhover() {
+        shape.setFillColor(baseColor);
     }
 private:
     sf::RectangleShape shape;
     sf::Text text;
+    sf::Texture b_texture;
+    sf::Color baseColor;
+    sf::Color hoverColor;
 };
+
+
 
 
 class QTEbar : public sf::Drawable, public sf::Transformable{

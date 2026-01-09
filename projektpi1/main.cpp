@@ -30,7 +30,8 @@ struct GameStart {
     bool isSpaceActive = false;
 };
 
-void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, float dt, sf::Sound &sound, greyBar &visBar);
+void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, 
+    float dt, sf::Sound &sound, greyBar &visBar, int &level, sf::Text &levelDisplay);
 
 void odbicie(sf::CircleShape &ball, float pozycja_x, GameStart &game, float dt, sf::CircleShape &can, sf::Sound &sound);
 
@@ -43,7 +44,7 @@ void bounce(sf::CircleShape &ball, sf::CircleShape &can, GameStart &game, sf::So
 void groundReset(sf::CircleShape &ball, GameStart &game, float ball_x);
 
 void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, sf::CircleShape &ball, sf::CircleShape &can, sf::CircleShape &ball2, GameStart &game, 
-    sf::Text &aim, sf::Text &move, sf::Text &drink, QTEbar &drinkBar, greyBar &visBar);
+    sf::Text &aim, sf::Text &move, sf::Text &drink, QTEbar &drinkBar, greyBar &visBar, sf::Text &levelDisplay);
 
 void drawBars(GameStart &game, sf::CircleShape &ball, sf::RenderWindow &window);
 
@@ -130,6 +131,15 @@ int main()
     visBar.setPosition({ 645, 540 });
 
 
+    int level = 1;
+    //char levelChar = '1';
+    sf::Text levelDisplay(font, std::to_string(level));
+    levelDisplay.setCharacterSize(15);
+    levelDisplay.setStyle(sf::Text::Bold);
+    levelDisplay.setFillColor(sf::Color::Red);
+    levelDisplay.setPosition({ 300, 110 });
+
+
     // fizyka i czas
     float gravity = 980.f;
     sf::Clock clock;
@@ -149,7 +159,7 @@ int main()
             eventLoop(event, window, view, currentState, playButton, mousePos, exitButton); 
             
         // 2. logika gry
-        logic(currentState, game, ball, can, ramp_up, ball2, gravity, dt, sound, visBar);
+        logic(currentState, game, ball, can, ramp_up, ball2, gravity, dt, sound, visBar, level, levelDisplay);
 
         // 3. rysowanie
         /* RenderWindow window, x
@@ -168,7 +178,7 @@ int main()
         window.setView(view);
         window.draw(logicalBackground);
 
-        drawGame(currentState, playButton, window, exitButton, ball, can, ball2, game, aim, move, drink, drinkBar, visBar);
+        drawGame(currentState, playButton, window, exitButton, ball, can, ball2, game, aim, move, drink, drinkBar, visBar, levelDisplay);
         window.display();
         }
 }
@@ -215,7 +225,8 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
 // 2. logika gry
 // =====================================================================================================================
 
-void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, float dt, sf::Sound &sound, greyBar &visBar){
+void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, float dt, sf::Sound &sound, greyBar &visBar, 
+    int &level, sf::Text &levelDisplay){
     if (currentState == GameState::Game)
     {
         // 3.1 Reset rozgrywki
@@ -244,9 +255,21 @@ void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::
             if (!game.turn) {
                 odbicie(ball, game.ball_x, game, dt, can, sound);
                 //"picie"
-                if(game.hasHit == true)
-                drinkCounter(game,visBar);
-                
+                if (game.hasHit == true && game.myDrink < 30)
+                    drinkCounter(game, visBar);
+                else if (game.myDrink == 30){
+                    
+                    can.setFillColor(sf::Color::Yellow);
+                    //game.myDrink = 0;
+                    visBar.setPosition({ 645, 540 });
+                    ball.setPosition({ game.ball_x, game.ball_y });
+                    level++;
+                    levelDisplay.setString(std::to_string(level));
+                    //std::cout << level << std::endl;
+                    game = GameStart();
+                    
+                    
+                }
             }
 
             // Rzut bota
@@ -415,7 +438,7 @@ void groundReset(sf::CircleShape &ball, GameStart &game, float ball_x)
 void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& window,
     Button& exitButton, sf::CircleShape& ball, sf::CircleShape& can,
     sf::CircleShape& ball2, GameStart& game,
-    sf::Text& aim, sf::Text& move, sf::Text& drink, QTEbar &drinkBar, greyBar &visBar)
+    sf::Text& aim, sf::Text& move, sf::Text& drink, QTEbar &drinkBar, greyBar &visBar, sf::Text &levelDisplay)
 {
     if (currentState == GameState::Menu)
     {
@@ -433,6 +456,7 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
         window.draw(drink);
         window.draw(drinkBar);
         window.draw(visBar);
+        window.draw(levelDisplay);
 
         drawBars(game, ball, window);
     }

@@ -17,6 +17,12 @@ enum class GameState { Menu, Game, GameMenu };
 std::string buttText = "../assets/img/button.png";
 
 
+sf::Vector2f enemyBasePos = sf::Vector2f({ 50.0, 215.0 });
+sf::Vector2f playerBasePos = sf::Vector2f({ 750.0, 215.0 });
+
+charLook playerChar = { 1, 2, 4, sf::Color(255, 0, 0), sf::Color(0, 255, 0), sf::Color(0, 0, 255), sf::Color(255, 255, 0) };
+charSprite playerSP(playerBasePos, playerChar);
+
 struct GameStart {
     sf::Vector2f velocity = { 0.f, 0.f };
     float up = 0.0f;
@@ -163,40 +169,21 @@ int main()
     sf::Clock clock;
 
     
-
-    // main loop
     while (window.isOpen()) {
 
         if (currentState == GameState::Game) {
             logicalBackground.setTexture(&gameBG);
         }
 
-        // 0. czas + mysz
         float dt = clock.restart().asSeconds();
 
         sf::Vector2i mousePosI = sf::Mouse::getPosition(window);
         sf::Vector2f mousePos = window.mapPixelToCoords(mousePosI, view);
         float ramp_up = 250.f * dt * 2;
 
-        // 1. event loop 
-        while (const std::optional event = window.pollEvent()) 
-            eventLoop(event, window, view, currentState, playButton, mousePos, exitButton); 
+        while (const std::optional event = window.pollEvent()) eventLoop(event, window, view, currentState, playButton, mousePos, exitButton); 
             
-        // 2. logika gry
         logic(currentState, game, ball, can, ramp_up, ball2, gravity, dt, sound, visBar, level, levelDisplay, visEnemyBar);
-
-        // 3. rysowanie
-        /* RenderWindow window, x
-        View view 
-        RectangleShape logicalBackground
-        GameState currentState x
-
-        CircleShape ball x
-        CircleShape ball2 x 
-        CircleShape can x
-        
-        GameStart game 
-        RectangleShape powerBar */
 
         window.clear(sf::Color::Black);
         window.setView(view);
@@ -207,8 +194,6 @@ int main()
         }
 }
 
-// 1. event loop 
-// =====================================================================================================================
 
 void eventLoop(const std::optional<sf::Event> &event, sf::RenderWindow &window, sf::View &view, GameState &currentState, Button &playButton, sf::Vector2f &mousePos, Button &exitButton){
 
@@ -258,8 +243,6 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
     }
 }
 
-// 2. logika gry
-// =====================================================================================================================
 
 void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, float dt, sf::Sound &sound, greyBar &visBar, 
     int &level, sf::Text &levelDisplay, greyBar& visEnemyBar){
@@ -274,14 +257,19 @@ void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::
         }
 
         // Charge player / bot
-        // 3.2 Lot piłki 
+        // 3.2 Lot piłki
         if (!game.isFlying){
             // Ruch p
-            if (!game.turn)
+            if (!game.turn) {
                 rzutGracz(game, ramp_up);
-
-            else
+                playerSP.flip();
+                playerSP.setPos(playerBasePos.x, playerBasePos.y);
+            }
+            else {
                 rzutBot(can, ball2, gravity, game, level);
+                playerSP.flip(1);
+                playerSP.setPos(enemyBasePos.x, enemyBasePos.y);
+            }
         }
         
         // 3.3 Odbicie piłki
@@ -303,21 +291,8 @@ void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::
                     levelDisplay.setString(std::to_string(level));
                     //std::cout << level << std::endl;
                     game = GameStart();
-                    
-                    
                 }
-            }
-
-            // Rzut bota
-            else 
-                odbicie(ball2, game.bot_ball_x, game, dt, can, sound);
-
-
-            //temp solution should be based on time player pick up can 
-           /* if (game.turn && game.hasHit == true) {
-                drinkCounterEnemy(game, visEnemyBar);
-                game.hasHit = false;
-            }*/
+            } else odbicie(ball2, game.bot_ball_x, game, dt, can, sound);
         }
     }
 }
@@ -341,7 +316,6 @@ void rzutBot(sf::CircleShape &can, sf::CircleShape &ball2, float gravity, GameSt
     {
         std::uniform_real_distribution<> dis2(-160.0f + (10 * level), 160.0f - (10 * level));
         margin = dis2(gen);
-        
     }
     else {
         std::uniform_real_distribution<> dis2(-100.0f , 100.0f );
@@ -482,7 +456,6 @@ void drinkCounterEnemy(GameStart& game, greyBar& visEnemyBar) {
 
     for (int i = 0; i < moveCount; i++) {
         visEnemyBar.move({ 0, -5.f });
-        //std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 }
 
@@ -497,9 +470,6 @@ void groundReset(sf::CircleShape &ball, GameStart &game, float ball_x)
     }
 
 }
-
-// 3. rysowanie
-// =====================================================================================================================
 
 void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& window,
     Button& exitButton, sf::CircleShape& ball, sf::CircleShape& can,
@@ -526,6 +496,7 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
         window.draw(visEnemyBar);
         window.draw(levelDisplay);
 
+        playerSP.draw(window);
         drawBars(game, ball, window);
     }
 }

@@ -88,6 +88,7 @@ public:
         if (charLook.hairID > 0) {
             hasHair = true;
             hairTxt.loadFromFile(std::format("assets/img/sprites/hair/hair{}.png", charLook.hairID));
+            hair.setOrigin({ 157.0/2, 354.0/2 });
             hair.setTexture(&hairTxt);
             hair.setFillColor(charLook.hairColor);
             hair.setPosition(position);
@@ -96,6 +97,7 @@ public:
         if (charLook.faceID > 0) {
             hasFace = true;
             faceTxt.loadFromFile(std::format("assets/img/sprites/face/face{}.png", charLook.faceID));
+            face.setOrigin({ 157.0 / 2, 354.0 / 2 });
             face.setTexture(&faceTxt);
             face.setPosition(position);
         }
@@ -103,41 +105,51 @@ public:
         if (charLook.hatID > 0) {
             hasHat = true;
             hatTxt.loadFromFile(std::format("assets/img/sprites/hat/hat{}.png", charLook.hatID));
+            hat.setOrigin({ 157.0 / 2, 354.0 / 2 });
             hat.setTexture(&hatTxt);
             hat.setPosition(position);
         }
 
         shoesTxt.loadFromFile("assets/img/sprites/shoes.png");
         shoes.setTexture(&shoesTxt);
+        shoes.setOrigin({ 157.0 / 2, 354.0 / 2 });
         shoes.setFillColor(charLook.shoeColor);
         shoes.setPosition(position);
 
         pantsTxt.loadFromFile("assets/img/sprites/pants.png");
+        pants.setOrigin({ 157.0 / 2, 354.0 / 2 });
         pants.setTexture(&pantsTxt);
         pants.setFillColor(charLook.pantsColor);
         pants.setPosition(position);
 
         shirtTxt.loadFromFile("assets/img/sprites/shirt.png");
+        shirt.setOrigin({ 157.0 / 2, 354.0 / 2 });
         shirt.setTexture(&shirtTxt);
         shirt.setFillColor(charLook.topColor);
         shirt.setPosition(position);
 
         fingersTxt.loadFromFile("assets/img/sprites/fingers.png");
+        fingers.setOrigin({ 157.0 / 2, 354.0 / 2 });
         fingers.setTexture(&fingersTxt);
         fingers.setPosition(position);
 
         handBGTxt.loadFromFile("assets/img/sprites/handbg.png");
+        handBG.setOrigin({ 157.0 / 2, 354.0 / 2 });
         handBG.setTexture(&handBGTxt);
         handBG.setPosition(position);
 
         handFGTxt.loadFromFile("assets/img/sprites/handfg.png");
+        handFG.setOrigin({ 157.0 / 2, 354.0 / 2 });
         handFG.setTexture(&handFGTxt);
         handFG.setPosition(position);
 
         headTxt.loadFromFile("assets/img/sprites/head.png");
+        head.setOrigin({ 157.0 / 2, 354.0 / 2 });
         head.setTexture(&headTxt);
         head.setPosition(position);
     }
+    // -1 - facing left, 1 - facing right
+    int facing = 1.f;
 
     void draw(sf::RenderWindow& window) {
         window.draw(shoes);
@@ -164,9 +176,11 @@ public:
         face.setPosition(sf::Vector2f(x, y));
         hat.setPosition(sf::Vector2f(x, y));
     }
-    // dir: -1 - facing left, 1 - facing right
-    void flip(float dir = -1) {
-        sf::Vector2f direction = { dir, 1.f };
+    
+    // -1 - facing left, 1 - facing right
+    void flip(int dir = 0) {
+        facing = dir ? dir : -1 * facing;
+        sf::Vector2f direction = { (float)facing, 1.f };
         shoes.setScale(direction);
         pants.setScale(direction);
         shirt.setScale(direction);
@@ -179,26 +193,8 @@ public:
         hat.setScale(direction);
     }
 
-    void PositionAtFeet(sf::Sprite& s) 
-    {
-        auto b = s.getLocalBounds();
-        s.setOrigin({ b.size.x / 2.f, b.size.y });
-    }
-
-    void faceRight(sf::Sprite& s)
-    {
-        auto sc = s.getScale();
-        s.setScale({ std::abs(sc.x), sc.y });
-    }
-
-    void faceLeft(sf::Sprite& s) 
-    {
-        auto sc = s.getScale();
-        s.setScale({ -std::abs(sc.x), sc.y });
-    }
-
 private:
-    sf::RectangleShape mainRect;
+    sf::RectangleShape parts;
     sf::RectangleShape shoes;
     sf::RectangleShape pants;
     sf::RectangleShape shirt;

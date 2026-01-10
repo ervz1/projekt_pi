@@ -114,7 +114,7 @@ int main()
 
     // SETUP
     GameStart game;
-    playerSP.flip(1), game.graczFacingRight = false;
+    playerSP.flip(-1), game.graczFacingRight = false;
 
 
     //  Rozmiar okna, resize
@@ -384,20 +384,20 @@ void logic(GameState &currentState, GameStart &game,
         if (game.hitEvent)
         {
             if (!game.turn) {
-                game.graczBiegnie = true;
-                game.graczWraca   = false;
-
-                game.botPije      = true;
-                game.graczPije    = false;
-                game.botDrinkAcc  = 0.f;
-            } else {
                 game.botBiegnie = true;
-                game.botWraca   = false;
+                game.botWraca = false;
 
                 game.botRunSpeed = 0.7f + static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX) * 0.5f; // 0.7–1.2
 
                 game.graczPije = true;
-                game.botPije   = false;
+                game.botPije = false;
+            } else {
+                game.graczBiegnie = true;
+                game.graczWraca = false;
+
+                game.botPije = true;
+                game.graczPije = false;
+                game.botDrinkAcc = 0.f;
             }
 
             game.hitEvent = false; // zużyte
@@ -412,16 +412,6 @@ void logic(GameState &currentState, GameStart &game,
         const float targetX = game.graczWraca ? game.graczHomeX : midPlayerX;
         const float dir     = (targetX > game.graczX) ? 1.f : -1.f;
 
-        // === FLIP ===
-        if (dir > 0.f && !game.graczFacingRight) {
-            playerSP.flip(1);
-            game.graczFacingRight = true;
-        }
-        else if (dir < 0.f && game.graczFacingRight) {
-            playerSP.flip(1);
-            game.graczFacingRight = false;
-        }
-
         game.graczX += dir * PLAYER_RUN_STEP;
 
         const bool reached =
@@ -432,8 +422,10 @@ void logic(GameState &currentState, GameStart &game,
             game.graczX = targetX;
 
             if (!game.graczWraca) {
+                playerSP.flip();
                 game.graczWraca = true;
             } else {
+                playerSP.flip();
                 game.graczWraca   = false;
                 game.graczBiegnie = false;
                 game.botPije      = false;
@@ -461,9 +453,10 @@ void logic(GameState &currentState, GameStart &game,
             if (!game.botWraca) 
             {
                 game.botWraca = true;
-                // enemySP.flip();
+                enemySP.flip();
             }
             else {
+                enemySP.flip();
                 game.botWraca   = false;
                 game.botBiegnie = false;
                 game.graczPije  = false;
@@ -669,7 +662,6 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
         window.draw(can);
         ball2.draw(window);
         
-        playerSP.flip();
         enemySP.draw(window);
         playerSP.draw(window);
 

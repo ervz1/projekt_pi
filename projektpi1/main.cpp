@@ -14,7 +14,7 @@
 sf::Vector2f mainWin = { 800.0f, 600.0f };
 void updateViewViewport(const sf::RenderWindow&, sf::View&);
 enum class GameState { Menu, Game, GameMenu };
-std::string buttText = "../assets/img/button.png";
+std::string buttText = "assets/img/button.png";
 
 
 sf::Vector2f enemyBasePos = sf::Vector2f({ 50.0, 215.0 });
@@ -41,25 +41,25 @@ struct GameStart {
     bool isSpaceActive = false;
 };
 
-void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, 
+void logic(GameState &currentState, GameStart &game, canSprite &ball, sf::CircleShape &can, float ramp_up, canSprite &ball2, float gravity,
     float dt, sf::Sound &sound, greyBar &visBar, int &level, sf::Text &levelDisplay, greyBar& visEnemyBar);
 
-void odbicie(sf::CircleShape &ball, float pozycja_x, GameStart &game, float dt, sf::CircleShape &can, sf::Sound &sound);
+void odbicie(canSprite &ball, float pozycja_x, GameStart &game, float dt, sf::CircleShape &can, sf::Sound &sound);
 
-void rzutBot(sf::CircleShape &can, sf::CircleShape &ball2, float gravity, GameStart &game, int& level);
+void rzutBot(sf::CircleShape &can, canSprite &ball2, float gravity, GameStart &game, int& level);
 
 void rzutGracz(GameStart &game, float ramp_up);
 
-void bounce(sf::CircleShape &ball, sf::CircleShape &can, GameStart &game, sf::Sound &sound);
+void bounce(canSprite &ball, sf::CircleShape &can, GameStart &game, sf::Sound &sound);
 
-void groundReset(sf::CircleShape &ball, GameStart &game, float ball_x);
+void groundReset(canSprite &ball, GameStart &game, float ball_x);
 
-void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, sf::CircleShape &ball, sf::CircleShape &can, sf::CircleShape &ball2, GameStart &game, 
+void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, canSprite &ball, sf::CircleShape &can, canSprite &ball2, GameStart &game,
     sf::Text &aim, sf::Text &move, sf::Text &drink, QTEbar &drinkBar, greyBar &visBar, sf::Text &levelDisplay, QTEbar& enemyBar, greyBar& visEnemyBar);
 
-void drawBars(GameStart &game, sf::CircleShape &ball, sf::RenderWindow &window);
+void drawBars(GameStart &game, canSprite &ball, sf::RenderWindow &window);
 
-void drawPowerbar(GameStart &game, sf::CircleShape &ball, sf::RenderWindow &window, float direction_up, float direction_left);
+void drawPowerbar(GameStart &game, canSprite &ball, sf::RenderWindow &window, float direction_up, float direction_left);
 
 void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::Vector2f &mousePos, GameState &currentState, Button &exitButton, sf::RenderWindow &window);
 
@@ -88,10 +88,10 @@ int main()
 
     // Assety
     sf::Font font;
-    if (!font.openFromFile("../assets/fonts/DejaVuSans.ttf")) return -1;
+    if (!font.openFromFile("assets/fonts/DejaVuSans.ttf")) return -1;
 
     sf::SoundBuffer buffer;
-    if (!buffer.loadFromFile("../assets/music/clank.mp3")) return -1;
+    if (!buffer.loadFromFile("assets/music/clank.mp3")) return -1;
     
     sf::Sound sound(buffer);
     
@@ -102,9 +102,9 @@ int main()
 
     // Tło
     sf::Texture mainMenuBG;
-    if (!mainMenuBG.loadFromFile("../assets/img/mainmenu.png")) return -1;
+    if (!mainMenuBG.loadFromFile("assets/img/mainmenu.png")) return -1;
     sf::Texture gameBG;
-    if (!gameBG.loadFromFile("../assets/img/gamebg.png")) return -1;
+    if (!gameBG.loadFromFile("assets/img/gamebg.png")) return -1;
 
     sf::RectangleShape logicalBackground(mainWin);
     logicalBackground.setPosition({ 0.f, 0.f });
@@ -115,13 +115,21 @@ int main()
     can.setFillColor(sf::Color::Yellow);
     can.setPosition({ 400.f, 300.f });
 
-    sf::CircleShape ball(10.f);
-    ball.setFillColor(sf::Color::Black);
+    sf::Texture throwcanTxt;
+    throwcanTxt.loadFromFile("assets/img/throwcan.png");
+
+    canSprite ball({0.f, 0.f}, sf::Color::Blue);
+    canSprite ball2({ 0.f, 0.f }, sf::Color::Red);
+
+    /*sf::RectangleShape ball({42.f, 29.f});
+    ball.setTexture(&throwcanTxt);
+    ball.setFillColor(sf::Color::Blue);
     ball.setPosition({ game.ball_x, game.ball_y });
 
-    sf::CircleShape ball2(10.f);
-    ball2.setFillColor(sf::Color::White);
-    ball2.setPosition({ game.bot_ball_x, game.ball_y });
+    sf::RectangleShape ball2({ 42.f, 29.f });
+    ball2.setTexture(&throwcanTxt);
+    ball2.setFillColor(sf::Color::Red);
+    ball2.setPosition({ game.bot_ball_x, game.ball_y });*/
 
 
     sf::Text aim(font, "Celowanie - Strzalki(Gora/Lewo)");
@@ -244,7 +252,7 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
 }
 
 
-void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, float dt, sf::Sound &sound, greyBar &visBar, 
+void logic(GameState &currentState, GameStart &game, canSprite &ball, sf::CircleShape &can, float ramp_up, canSprite &ball2, float gravity, float dt, sf::Sound &sound, greyBar &visBar,
     int &level, sf::Text &levelDisplay, greyBar& visEnemyBar){
     if (currentState == GameState::Game)
     {
@@ -297,14 +305,14 @@ void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::
     }
 }
 
-void odbicie(sf::CircleShape &ball, float pozycja_x, GameStart &game, float dt, sf::CircleShape &can, sf::Sound &sound)
+void odbicie(canSprite&ball, float pozycja_x, GameStart &game, float dt, sf::CircleShape &can, sf::Sound &sound)
 {
     ball.move(game.velocity * dt);        // ruch puszki
     bounce(ball, can, game, sound);       // odbicie
     groundReset(ball, game, pozycja_x); // reset po odbiciu
 }
 
-void rzutBot(sf::CircleShape &can, sf::CircleShape &ball2, float gravity, GameStart &game, int &level)
+void rzutBot(sf::CircleShape &can, canSprite &ball2, float gravity, GameStart &game, int &level)
 {
 
     std::random_device rd;
@@ -401,7 +409,7 @@ void rzutGracz(GameStart &game, float ramp_up)
     }
 }
 
-void bounce(sf::CircleShape &ball, sf::CircleShape &can, GameStart &game, sf::Sound &sound)
+void bounce(canSprite &ball, sf::CircleShape &can, GameStart &game, sf::Sound &sound)
 {
     if (ball.getGlobalBounds().findIntersection(can.getGlobalBounds()))
     {
@@ -459,7 +467,7 @@ void drinkCounterEnemy(GameStart& game, greyBar& visEnemyBar) {
     }
 }
 
-void groundReset(sf::CircleShape &ball, GameStart &game, float ball_x)
+void groundReset(canSprite &ball, GameStart &game, float ball_x)
 {
     if (ball.getPosition().y > 600.f)
     {
@@ -472,8 +480,8 @@ void groundReset(sf::CircleShape &ball, GameStart &game, float ball_x)
 }
 
 void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& window,
-    Button& exitButton, sf::CircleShape& ball, sf::CircleShape& can,
-    sf::CircleShape& ball2, GameStart& game,
+    Button& exitButton, canSprite &ball, sf::CircleShape& can,
+    canSprite &ball2, GameStart& game,
     sf::Text& aim, sf::Text& move, sf::Text& drink, QTEbar &drinkBar, greyBar &visBar, sf::Text &levelDisplay, QTEbar& enemyBar, greyBar& visEnemyBar)
 {
     if (currentState == GameState::Menu)
@@ -483,9 +491,9 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
     }
     else if (currentState == GameState::Game)
     {
-        window.draw(ball);
+        ball.draw(window);
         window.draw(can);
-        window.draw(ball2);
+        ball2.draw(window);
 
         window.draw(aim);
         window.draw(move);
@@ -501,7 +509,7 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
     }
 }
 
-void drawBars(GameStart &game, sf::CircleShape &ball, sf::RenderWindow &window)
+void drawBars(GameStart &game, canSprite &ball, sf::RenderWindow &window)
 {
     if (!game.isFlying && (game.up > 0.0f || game.left > 0.0f))
     {

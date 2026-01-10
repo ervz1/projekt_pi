@@ -31,6 +31,46 @@ struct charLook {
     sf::Color hairColor;
 };
 
+class canSprite {
+public:
+    canSprite(const sf::Vector2f& position, sf::Color color)
+    : can({ 42.f, 29.f }),
+    canBG({ 42.f, 29.f }) {
+        canTxt.loadFromFile("assets/img/throwcantrace.png");
+        can.setTexture(&canTxt);
+        canBGTxt.loadFromFile("assets/img/throwcancolor.png");
+        canBG.setTexture(&canBGTxt);
+        canBG.setFillColor(color);
+    }
+    sf::Vector2f getPosition() {
+        return can.getPosition();
+    }
+
+    sf::FloatRect getGlobalBounds() {
+        return can.getGlobalBounds();
+    }
+
+    void setPosition(sf::Vector2f pos) {
+        can.setPosition(pos);
+        canBG.setPosition(pos);
+    }
+    void move(sf::Vector2f off) {
+        can.move(off);
+        canBG.move(off);
+    }
+
+    void draw(sf::RenderWindow& window) {
+        window.draw(can);
+        window.draw(canBG);
+    }
+private:
+    sf::RectangleShape can;
+    sf::RectangleShape canBG;
+
+    sf::Texture canTxt;
+    sf::Texture canBGTxt;
+};
+
 class charSprite {
 public:
     charSprite(const sf::Vector2f& position, charLook charLook = { 0, 0, 0, sf::Color(0, 0, 0), sf::Color(0, 0, 0), sf::Color(0, 0, 0), sf::Color(0, 0, 0) })
@@ -47,7 +87,7 @@ public:
 
         if (charLook.hairID > 0) {
             hasHair = true;
-            hairTxt.loadFromFile(std::format("../assets/img/sprites/hair/hair{}.png", charLook.hairID));
+            hairTxt.loadFromFile(std::format("assets/img/sprites/hair/hair{}.png", charLook.hairID));
             hair.setTexture(&hairTxt);
             hair.setFillColor(charLook.hairColor);
             hair.setPosition(position);
@@ -55,46 +95,46 @@ public:
 
         if (charLook.faceID > 0) {
             hasFace = true;
-            faceTxt.loadFromFile(std::format("../assets/img/sprites/face/face{}.png", charLook.faceID));
+            faceTxt.loadFromFile(std::format("assets/img/sprites/face/face{}.png", charLook.faceID));
             face.setTexture(&faceTxt);
             face.setPosition(position);
         }
 
         if (charLook.hatID > 0) {
             hasHat = true;
-            hatTxt.loadFromFile(std::format("../assets/img/sprites/hat/hat{}.png", charLook.hatID));
+            hatTxt.loadFromFile(std::format("assets/img/sprites/hat/hat{}.png", charLook.hatID));
             hat.setTexture(&hatTxt);
             hat.setPosition(position);
         }
 
-        shoesTxt.loadFromFile("../assets/img/sprites/shoes.png");
+        shoesTxt.loadFromFile("assets/img/sprites/shoes.png");
         shoes.setTexture(&shoesTxt);
         shoes.setFillColor(charLook.shoeColor);
         shoes.setPosition(position);
 
-        pantsTxt.loadFromFile("../assets/img/sprites/pants.png");
+        pantsTxt.loadFromFile("assets/img/sprites/pants.png");
         pants.setTexture(&pantsTxt);
         pants.setFillColor(charLook.pantsColor);
         pants.setPosition(position);
 
-        shirtTxt.loadFromFile("../assets/img/sprites/shirt.png");
+        shirtTxt.loadFromFile("assets/img/sprites/shirt.png");
         shirt.setTexture(&shirtTxt);
         shirt.setFillColor(charLook.topColor);
         shirt.setPosition(position);
 
-        fingersTxt.loadFromFile("../assets/img/sprites/fingers.png");
+        fingersTxt.loadFromFile("assets/img/sprites/fingers.png");
         fingers.setTexture(&fingersTxt);
         fingers.setPosition(position);
 
-        handBGTxt.loadFromFile("../assets/img/sprites/handbg.png");
+        handBGTxt.loadFromFile("assets/img/sprites/handbg.png");
         handBG.setTexture(&handBGTxt);
         handBG.setPosition(position);
 
-        handFGTxt.loadFromFile("../assets/img/sprites/handfg.png");
+        handFGTxt.loadFromFile("assets/img/sprites/handfg.png");
         handFG.setTexture(&handFGTxt);
         handFG.setPosition(position);
 
-        headTxt.loadFromFile("../assets/img/sprites/head.png");
+        headTxt.loadFromFile("assets/img/sprites/head.png");
         head.setTexture(&headTxt);
         head.setPosition(position);
     }

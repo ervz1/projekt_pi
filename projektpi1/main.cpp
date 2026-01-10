@@ -26,7 +26,7 @@ struct GameStart {
     float maxCharge = 800.0f;
     float bot_ball_x = 100.f;
     float ball_x = 700.f;
-    float ball_y = 400.f;
+    float ball_y = 200.f;
     bool turn = false;
     bool hasHit = false;
     sf::Vector2f initialVelocity;

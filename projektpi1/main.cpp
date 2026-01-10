@@ -162,11 +162,6 @@ int main()
     canSprite ball({0.f, 0.f}, sf::Color::Blue);
     canSprite ball2({ 0.f, 0.f }, sf::Color::Red);
 
-
-    sf::CircleShape ball2(10.f);
-    ball2.setFillColor(sf::Color::White);
-    ball2.setPosition({ game.bot_ball_x, game.ball_y });
-
     sf::Sound sound(buffer);
 
     // Punkty
@@ -656,8 +651,8 @@ void groundReset(canSprite &ball, GameStart &game, float ball_x)
 }
 
 void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& window,
-    Button& exitButton, sf::CircleShape& ball, sf::CircleShape& can,
-    sf::CircleShape& ball2, GameStart& game,
+    Button& exitButton, canSprite& ball, sf::CircleShape& can,
+    canSprite& ball2, GameStart& game,
     sf::Text& aim, sf::Text& move, sf::Text& drink, QTEbar &drinkBar, greyBar &visBar, sf::Text &levelDisplay, QTEbar& enemyBar, greyBar& visEnemyBar, sf::Text scoreText, sf::Text roundText)
 {
     if (currentState == GameState::Menu)
@@ -670,9 +665,9 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
         window.draw(scoreText);
         window.draw(roundText);
 
-        window.draw(ball);
+        ball.draw(window);
         window.draw(can);
-        window.draw(ball2);
+        ball2.draw(window);
         
         playerSP.flip();
         enemySP.draw(window);

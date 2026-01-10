@@ -179,6 +179,24 @@ public:
         hat.setScale(direction);
     }
 
+    void PositionAtFeet(sf::Sprite& s) 
+    {
+        auto b = s.getLocalBounds();
+        s.setOrigin({ b.size.x / 2.f, b.size.y });
+    }
+
+    void faceRight(sf::Sprite& s)
+    {
+        auto sc = s.getScale();
+        s.setScale({ std::abs(sc.x), sc.y });
+    }
+
+    void faceLeft(sf::Sprite& s) 
+    {
+        auto sc = s.getScale();
+        s.setScale({ -std::abs(sc.x), sc.y });
+    }
+
 private:
     sf::RectangleShape mainRect;
     sf::RectangleShape shoes;
@@ -304,7 +322,7 @@ public:
 
         //for (int i = 0; i < 3; i++) {
             sf::RectangleShape rect(sf::Vector2f(width, height));
-            rect.setFillColor(sf::Color::Color(128, 128, 128));
+            rect.setFillColor(sf::Color(128, 128, 128));
             float yPos = (height + spacing);
             rect.setPosition(sf::Vector2f(0.f, yPos));
             m_rects.push_back(rect);

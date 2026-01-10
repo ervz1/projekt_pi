@@ -26,7 +26,7 @@ struct GameStart {
     float maxCharge = 800.0f;
     float bot_ball_x = 100.f;
     float ball_x = 700.f;
-    float ball_y = 200.f;
+    float ball_y = 400.f;
     bool turn = false;
     bool hasHit = false;
     sf::Vector2f initialVelocity;
@@ -107,7 +107,7 @@ int main()
     // Obiekty - puszki
     sf::CircleShape can(15.f);
     can.setFillColor(sf::Color::Yellow);
-    can.setPosition({ 400.f, 300.f });
+    can.setPosition({ 400.f, 500.f });
 
     sf::CircleShape ball(10.f);
     ball.setFillColor(sf::Color::Black);

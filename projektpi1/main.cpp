@@ -2,7 +2,6 @@
 #include <iostream>
 #include <optional>
 #include "globals.hpp"
-#include "helper.hpp"
 #include <SFML/Audio.hpp>
 #include <cstdlib>
 #include <ctime>
@@ -10,6 +9,9 @@
 #include <fstream>
 #include <chrono>
 #include <thread>
+#include "helper.hpp"
+#include <cmath> 
+
 
 sf::Vector2f mainWin = { 800.0f, 600.0f };
 void updateViewViewport(const sf::RenderWindow&, sf::View&);
@@ -22,23 +24,62 @@ sf::Vector2f playerBasePos = sf::Vector2f({ 750.0, 215.0 });
 
 charLook playerChar = { 1, 2, 4, sf::Color(255, 0, 0), sf::Color(0, 255, 0), sf::Color(0, 0, 255), sf::Color(255, 255, 0) };
 charSprite playerSP(playerBasePos, playerChar);
+charLook enemyChar = { 2, 1, 3, sf::Color(0, 200, 255), sf::Color(255, 80, 80), sf::Color(200, 200, 200), sf::Color(80, 255, 120) };
+charSprite enemySP(enemyBasePos, enemyChar);
+
 
 struct GameStart {
     sf::Vector2f velocity = { 0.f, 0.f };
+
     float up = 0.0f;
     float left = 0.0f;
+
     bool isCharging = false;
     bool isFlying = false;
+
     float maxCharge = 800.0f;
+
     float bot_ball_x = 100.f;
     float ball_x = 700.f;
     float ball_y = 200.f;
+
     bool turn = false;
+
     bool hasHit = false;
+    bool hitEvent = false;
+
     sf::Vector2f initialVelocity;
+
     int myDrink = 0;
     int enemyDrink = 0;
     bool isSpaceActive = false;
+
+    float graczX = 750.f;
+    float graczY = 215.f;
+    float botX   = 50.f;
+    float botY   = 215.f;
+
+    bool graczBiegnie = false;
+    bool botBiegnie   = false;
+
+    bool graczWraca = false;
+    bool botWraca   = false;
+
+    float graczHomeX = 750.f;
+    float botHomeX   = 50.f;
+
+    float botRunSpeed = 1.f;
+    bool graczPije = false;
+    bool botPije   = false;
+
+    float botDrinkAcc = 0.f;
+
+    bool spaceHeld = false; 
+    int scorePlayer = 0;
+    int scoreBot = 0;
+    int round = 1;          // zamiast level jak wolisz
+
+    bool graczFacingRight = true;
 };
 
 void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, 
@@ -54,8 +95,7 @@ void bounce(sf::CircleShape &ball, sf::CircleShape &can, GameStart &game, sf::So
 
 void groundReset(sf::CircleShape &ball, GameStart &game, float ball_x);
 
-void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, sf::CircleShape &ball, sf::CircleShape &can, sf::CircleShape &ball2, GameStart &game, 
-    sf::Text &aim, sf::Text &move, sf::Text &drink, QTEbar &drinkBar, greyBar &visBar, sf::Text &levelDisplay, QTEbar& enemyBar, greyBar& visEnemyBar);
+void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, sf::CircleShape &ball, sf::CircleShape &can, sf::CircleShape &ball2, GameStart &game, sf::Text &aim, sf::Text &move, sf::Text &drink, QTEbar &drinkBar, greyBar &visBar, sf::Text &levelDisplay, QTEbar& enemyBar, greyBar& visEnemyBar, sf::Text scoreText, sf::Text roundText);
 
 void drawBars(GameStart &game, sf::CircleShape &ball, sf::RenderWindow &window);
 
@@ -70,9 +110,12 @@ void drinkCounter(GameStart& game, greyBar &visBar);
 void drinkCounterEnemy(GameStart& game, greyBar &visEnemyBar);
 
 int main()
-{
+{   
+
     // SETUP
     GameStart game;
+    playerSP.flip(1), game.graczFacingRight = false;
+
 
     //  Rozmiar okna, resize
     sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "Flanki");
@@ -92,8 +135,6 @@ int main()
 
     sf::SoundBuffer buffer;
     if (!buffer.loadFromFile("../assets/music/clank.mp3")) return -1;
-    
-    sf::Sound sound(buffer);
     
     // Przyciski 
     sf::Clock keyTimer;
@@ -123,7 +164,19 @@ int main()
     ball2.setFillColor(sf::Color::White);
     ball2.setPosition({ game.bot_ball_x, game.ball_y });
 
+    sf::Sound sound(buffer);
 
+    // Punkty
+
+    sf::Text scoreText(font, "", 18);
+    scoreText.setFillColor(sf::Color::White);
+    scoreText.setPosition({20.f, 20.f});
+
+    sf::Text roundText(font, "", 18);
+    roundText.setFillColor(sf::Color::White);
+    roundText.setPosition({20.f, 45.f});
+    
+    
     sf::Text aim(font, "Celowanie - Strzalki(Gora/Lewo)");
     aim.setCharacterSize(15);
     aim.setStyle(sf::Text::Bold);
@@ -141,19 +194,22 @@ int main()
     move.setStyle(sf::Text::Bold);
     move.setFillColor(sf::Color::Red);
     move.setPosition({ 400, 110 });
-
+    
+    // gracz bar 
     QTEbar drinkBar(20.f, 50.f, 0.f);
-    drinkBar.setPosition({ 650, 400 });
-
-    QTEbar enemyBar(20.f, 50.f, 0.f);
-    enemyBar.setPosition({ 150, 400 });
-
+    drinkBar.setPosition({ 650 + 100, 400 });
+    
     greyBar visBar(30.f, 10.f, 0.f);
-    visBar.setPosition({ 645, 540 });
+    visBar.setPosition({ 645 + 100, 540 });
+
+    // enemy bar 
+    QTEbar enemyBar(20.f, 50.f, 0.f);
+    enemyBar.setPosition({ 150 - 100, 400 });
 
     greyBar visEnemyBar(30.f, 10.f, 0.f);
-    visEnemyBar.setPosition({ 145, 540 });
+    visEnemyBar.setPosition({ 145 - 100, 540 });
 
+    
 
     int level = 1;
     //char levelChar = '1';
@@ -168,7 +224,6 @@ int main()
     float gravity = 980.f;
     sf::Clock clock;
 
-    
     while (window.isOpen()) {
 
         if (currentState == GameState::Game) {
@@ -178,20 +233,37 @@ int main()
         float dt = clock.restart().asSeconds();
 
         sf::Vector2i mousePosI = sf::Mouse::getPosition(window);
+        sf::Vector2f mousePosUI = window.mapPixelToCoords(mousePosI); // bez view
+
         sf::Vector2f mousePos = window.mapPixelToCoords(mousePosI, view);
         float ramp_up = 250.f * dt * 2;
 
-        while (const std::optional event = window.pollEvent()) eventLoop(event, window, view, currentState, playButton, mousePos, exitButton); 
+        while (const std::optional event = window.pollEvent())
+        eventLoop(event, window, view, currentState, playButton, mousePosUI, exitButton);
             
         logic(currentState, game, ball, can, ramp_up, ball2, gravity, dt, sound, visBar, level, levelDisplay, visEnemyBar);
+        
+        scoreText.setString("Gracz: " + std::to_string(game.scorePlayer) + "\tBot: " + std::to_string(game.scoreBot));
+        roundText.setString("Runda: " + std::to_string(game.round));
 
         window.clear(sf::Color::Black);
         window.setView(view);
         window.draw(logicalBackground);
 
-        drawGame(currentState, playButton, window, exitButton, ball, can, ball2, game, aim, move, drink, drinkBar, visBar, levelDisplay, enemyBar, visEnemyBar);
+        drawGame(currentState, playButton, window, exitButton, ball, can, ball2, game, aim, move, drink, drinkBar, visBar, levelDisplay, enemyBar, visEnemyBar, scoreText, roundText);
+
         window.display();
-        }
+
+        std::cout
+        << "\033[2J\033[H"
+        << "turn=" << game.turn
+        << " flying=" << game.isFlying
+        << " graczBiegnie=" << game.graczBiegnie
+        << " botBiegnie=" << game.botBiegnie
+        << " charging=" << game.isCharging
+        << " up=" << game.up << " left=" << game.left
+        << "\n";
+    }
 }
 
 
@@ -244,56 +316,191 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
 }
 
 
-void logic(GameState &currentState, GameStart &game, sf::CircleShape &ball, sf::CircleShape &can, float ramp_up, sf::CircleShape &ball2, float gravity, float dt, sf::Sound &sound, greyBar &visBar, 
-    int &level, sf::Text &levelDisplay, greyBar& visEnemyBar){
-    if (currentState == GameState::Game)
+void logic(GameState &currentState, GameStart &game,
+           sf::CircleShape &ball, sf::CircleShape &can,
+           float ramp_up, sf::CircleShape &ball2,
+           float gravity, float dt, sf::Sound &sound,
+           greyBar &visBar, int &level, sf::Text &levelDisplay,
+           greyBar &visEnemyBar)
+{
+    if (currentState != GameState::Game) return;
+
+    const int   DRINK_MAX         = 30;
+    const float MID_OFFSET        = 60.f;   // żeby nie wchodzili w puszkę
+    const float PLAYER_RUN_STEP   = 10.f;   // px na jedno kliknięcie spacji
+    const float BOT_SPEED_BASE    = 90.f;   // px/s (bazowo wolniej)
+    const float BOT_DRINK_INTERVAL= 0.45f;  // sekundy na 1 "łyk" (wolno)
+
+    const float midX = can.getPosition().x;
+    const float midPlayerX = midX + MID_OFFSET;
+    const float midBotX    = midX - MID_OFFSET;
+
+    // klik
+    const bool spaceDown    = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Space);
+    const bool spacePressed = spaceDown && !game.spaceHeld;
+    game.spaceHeld = spaceDown;
+
+    auto resetRound = [&]() {
+        const int keepP = game.scorePlayer;
+        const int keepB = game.scoreBot;
+        const int keepR = game.round;
+
+        game = GameStart();
+        game.scorePlayer = keepP;
+        game.scoreBot    = keepB;
+        game.round       = keepR;
+
+        visBar.setPosition({645 + 100, 540});
+        visEnemyBar.setPosition({145 - 100, 540});
+        can.setFillColor(sf::Color::Yellow);
+
+        ball.setPosition({game.ball_x, game.ball_y});
+        ball2.setPosition({game.bot_ball_x, game.ball_y});
+
+        playerSP.setPos(game.graczX, game.graczY);
+        enemySP.setPos(game.botX, game.botY);
+    };
+
+    // ESC: reset do menu
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Escape)) {
+        currentState = GameState::Menu;
+        resetRound();
+        return;
+    }
+
+    // ===== 1 RZUT / ŁADOWANIE =====
+    if (!game.isFlying && !game.graczBiegnie && !game.botBiegnie && !game.graczPije && !game.botPije)
     {
-        // 3.1 Reset rozgrywki
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Escape)){
-            currentState = GameState::Menu;
-            game = GameStart();
-            ball.setPosition({game.ball_x, game.ball_y});
-            can.setFillColor(sf::Color::Yellow);
+        if (!game.turn) rzutGracz(game, ramp_up);
+        else            rzutBot(can, ball2, gravity, game, level);
+    }
+
+    // ===== 2 LOT =====
+    if (game.isFlying)
+    {
+        game.velocity.y += gravity * dt;
+
+        if (!game.turn) odbicie(ball,  game.ball_x,     game, dt, can, sound);
+        else            odbicie(ball2, game.bot_ball_x, game, dt, can, sound);
+
+        // event trafienia przychodzi z bounce
+        if (game.hitEvent)
+        {
+            if (!game.turn) {
+                game.graczBiegnie = true;
+                game.graczWraca   = false;
+
+                game.botPije      = true;
+                game.graczPije    = false;
+                game.botDrinkAcc  = 0.f;
+            } else {
+                game.botBiegnie = true;
+                game.botWraca   = false;
+
+                game.botRunSpeed = 0.7f + static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX) * 0.5f; // 0.7–1.2
+
+                game.graczPije = true;
+                game.botPije   = false;
+            }
+
+            game.hitEvent = false; // zużyte
+        }
+    }
+
+    // ===== 3 RUCH PO TRAFIENIU =====
+
+    // gracz bieg
+    if (game.graczBiegnie && spacePressed)
+    {
+        const float targetX = game.graczWraca ? game.graczHomeX : midPlayerX;
+        const float dir     = (targetX > game.graczX) ? 1.f : -1.f;
+
+        // === FLIP ===
+        if (dir > 0.f && !game.graczFacingRight) {
+            playerSP.flip(1);
+            game.graczFacingRight = true;
+        }
+        else if (dir < 0.f && game.graczFacingRight) {
+            playerSP.flip(1);
+            game.graczFacingRight = false;
         }
 
-        // Charge player / bot
-        // 3.2 Lot piłki
-        if (!game.isFlying){
-            // Ruch p
-            if (!game.turn) {
-                rzutGracz(game, ramp_up);
-                playerSP.flip();
-                playerSP.setPos(playerBasePos.x, playerBasePos.y);
+        game.graczX += dir * PLAYER_RUN_STEP;
+
+        const bool reached =
+            (dir > 0.f && game.graczX >= targetX) ||
+            (dir < 0.f && game.graczX <= targetX);
+
+        if (reached) {
+            game.graczX = targetX;
+
+            if (!game.graczWraca) {
+                game.graczWraca = true;
+            } else {
+                game.graczWraca   = false;
+                game.graczBiegnie = false;
+                game.botPije      = false;
+            }
+        }
+    }
+
+
+    // bot bieg
+    if (game.botBiegnie)
+    {
+        const float targetX = game.botWraca ? game.botHomeX : midBotX;
+        const float dir     = (targetX > game.botX) ? 1.f : -1.f;
+
+        const float v = BOT_SPEED_BASE * game.botRunSpeed;
+        game.botX += dir * v * dt;
+
+        const bool reached =
+            (dir > 0.f && game.botX >= targetX) ||
+            (dir < 0.f && game.botX <= targetX);
+
+        if (reached) {
+            game.botX = targetX;
+
+            if (!game.botWraca) 
+            {
+                game.botWraca = true;
+                // enemySP.flip();
             }
             else {
-                rzutBot(can, ball2, gravity, game, level);
-                playerSP.flip(1);
-                playerSP.setPos(enemyBasePos.x, enemyBasePos.y);
+                game.botWraca   = false;
+                game.botBiegnie = false;
+                game.graczPije  = false;
             }
         }
-        
-        // 3.3 Odbicie piłki
-        else{
-            game.velocity.y += gravity * dt;
-            // Rzut gracza
-            if (!game.turn) {
-                odbicie(ball, game.ball_x, game, dt, can, sound);
-                //"picie"
-                if (game.hasHit == true && game.myDrink < 30)
-                    drinkCounter(game, visBar);
-                else if (game.myDrink == 30){
-                    
-                    can.setFillColor(sf::Color::Yellow);
-                    //game.myDrink = 0;
-                    visBar.setPosition({ 645, 540 });
-                    ball.setPosition({ game.ball_x, game.ball_y });
-                    level++;
-                    levelDisplay.setString(std::to_string(level));
-                    //std::cout << level << std::endl;
-                    game = GameStart();
-                }
-            } else odbicie(ball2, game.bot_ball_x, game, dt, can, sound);
+    }
+
+    // sync spriteów
+    playerSP.setPos(game.graczX, game.graczY);
+    enemySP.setPos(game.botX,   game.botY);
+
+    // ===== 4 PICIE =====
+    if (game.graczPije && spacePressed) {
+        drinkCounter(game, visBar);
+    }
+
+    if (game.botPije) {
+        game.botDrinkAcc += dt;
+        if (game.botDrinkAcc >= BOT_DRINK_INTERVAL) {
+            drinkCounterEnemy(game, visEnemyBar);
+            game.botDrinkAcc -= BOT_DRINK_INTERVAL;
         }
+    }
+
+    // ===== 5 PUNKTY =====
+    if (game.enemyDrink >= DRINK_MAX) {
+        game.scoreBot++;
+        game.round++;
+        resetRound();
+    }
+    else if (game.myDrink >= DRINK_MAX) {
+        game.scorePlayer++;
+        game.round++;
+        resetRound();
     }
 }
 
@@ -352,6 +559,7 @@ void rzutBot(sf::CircleShape &can, sf::CircleShape &ball2, float gravity, GameSt
      
     game.velocity = sf::Vector2f(random_x, -(margin + random_y));
     std::cout  << "margin" << margin<< std::endl;
+    
     // game.velocity = sf::Vector2f(687.352, -175.465);
     game.initialVelocity = game.velocity;
     game.hasHit = false;
@@ -403,60 +611,34 @@ void rzutGracz(GameStart &game, float ramp_up)
 
 void bounce(sf::CircleShape &ball, sf::CircleShape &can, GameStart &game, sf::Sound &sound)
 {
-    if (ball.getGlobalBounds().findIntersection(can.getGlobalBounds()))
+    if (ball.getGlobalBounds().findIntersection(can.getGlobalBounds()) && !game.hasHit)
     {
-        if (!game.hasHit)
-        {
-            /*std::fstream hit_data;
-            hit_data.open("../assets/data/hit_x_y.txt", std::ios::out | std::ios::app);
-            hit_data << std::abs(game.initialVelocity.x) << ' ' << std::abs(game.initialVelocity.y) << "\n";
-            hit_data.close();*/
+        game.velocity.x = -game.velocity.x;
+        game.velocity.y = -game.velocity.y;
 
-            game.velocity.x = -game.velocity.x * 1.0f;
-            game.velocity.y = -game.velocity.y * 1.0f;
-            can.setFillColor(sf::Color::Magenta);
-            if (sound.getStatus() != sf::Sound::Status::Playing)
-            {
-                //sound.play();
-            }
+        can.setFillColor(sf::Color::Magenta);
 
-            game.hasHit = true;
-        }
+        game.hasHit   = true;   // blokada na resztę lotu
+        game.hitEvent = true;   // JEDNORAZOWY event do logic()
     }
 }
 
-void drinkCounter(GameStart& game, greyBar &visBar) {
-    bool currentlyPressing = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Space);
+void drinkCounter(GameStart& game, greyBar &visBar)
+{
+    constexpr int DRINK_MAX = 30;
+    if (game.myDrink >= DRINK_MAX) return;
 
-    if (currentlyPressing && !game.isSpaceActive)
-    {
-
-        visBar.move({ 0, (-5.f) });
-        game.myDrink++;
-        std::cout << game.myDrink << std::endl;
-
-        game.isSpaceActive = true;
-        
-    }
-    else if (!currentlyPressing)
-    {
-        game.isSpaceActive = false;
-        
-    }
-    std::cout << game.myDrink << std::endl;
+    game.myDrink++;
+    visBar.move({0.f, -5.f});
 }
 
-void drinkCounterEnemy(GameStart& game, greyBar& visEnemyBar) {
+void drinkCounterEnemy(GameStart& game, greyBar& visEnemyBar)
+{
+    constexpr int DRINK_MAX = 30;
+    if (game.enemyDrink >= DRINK_MAX) return;
 
-    std::random_device dev;
-    std::mt19937 rng(dev());
-    std::uniform_int_distribution<std::mt19937::result_type> dist(6, 10);
-
-    int moveCount = dist(rng);
-
-    for (int i = 0; i < moveCount; i++) {
-        visEnemyBar.move({ 0, -5.f });
-    }
+    game.enemyDrink++;
+    visEnemyBar.move({0.f, -5.f});
 }
 
 void groundReset(sf::CircleShape &ball, GameStart &game, float ball_x)
@@ -474,7 +656,7 @@ void groundReset(sf::CircleShape &ball, GameStart &game, float ball_x)
 void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& window,
     Button& exitButton, sf::CircleShape& ball, sf::CircleShape& can,
     sf::CircleShape& ball2, GameStart& game,
-    sf::Text& aim, sf::Text& move, sf::Text& drink, QTEbar &drinkBar, greyBar &visBar, sf::Text &levelDisplay, QTEbar& enemyBar, greyBar& visEnemyBar)
+    sf::Text& aim, sf::Text& move, sf::Text& drink, QTEbar &drinkBar, greyBar &visBar, sf::Text &levelDisplay, QTEbar& enemyBar, greyBar& visEnemyBar, sf::Text scoreText, sf::Text roundText)
 {
     if (currentState == GameState::Menu)
     {
@@ -483,22 +665,32 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
     }
     else if (currentState == GameState::Game)
     {
+        window.draw(scoreText);
+        window.draw(roundText);
+
         window.draw(ball);
         window.draw(can);
         window.draw(ball2);
+        
+        playerSP.flip();
+        enemySP.draw(window);
+        playerSP.draw(window);
 
         window.draw(aim);
         window.draw(move);
         window.draw(drink);
+
         window.draw(drinkBar);
         window.draw(enemyBar);
+
         window.draw(visBar);
         window.draw(visEnemyBar);
+
         window.draw(levelDisplay);
 
-        playerSP.draw(window);
         drawBars(game, ball, window);
     }
+
 }
 
 void drawBars(GameStart &game, sf::CircleShape &ball, sf::RenderWindow &window)

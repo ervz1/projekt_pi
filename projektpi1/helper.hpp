@@ -73,154 +73,135 @@ private:
 
 class charSprite {
 public:
-    charSprite(const sf::Vector2f& position, charLook charLook = { 0, 0, 0, sf::Color(0, 0, 0), sf::Color(0, 0, 0), sf::Color(0, 0, 0), sf::Color(0, 0, 0) })
-    : shoes(sf::Vector2f({ 157.0, 354.0 })),
-      pants(sf::Vector2f({ 157.0, 354.0 })),
-      shirt(sf::Vector2f({ 157.0, 354.0 })),
-      fingers(sf::Vector2f({ 157.0, 354.0 })),
-      handBG(sf::Vector2f({ 157.0, 354.0 })),
-      handFG(sf::Vector2f({ 157.0, 354.0 })),
-      head(sf::Vector2f({ 157.0, 354.0 })),
-      hair(sf::Vector2f({ 157.0, 354.0 })),
-      face(sf::Vector2f({ 157.0, 354.0 })),
-      hat(sf::Vector2f({ 157.0, 354.0 })) {
+    static constexpr sf::Vector2f PartSize{ 157.f, 354.f };
 
-        if (charLook.hairID > 0) {
-            hasHair = true;
-            hairTxt.loadFromFile(std::format("assets/img/sprites/hair/hair{}.png", charLook.hairID));
-            hair.setOrigin({ 157.0/2, 354.0/2 });
-            hair.setTexture(&hairTxt);
-            hair.setFillColor(charLook.hairColor);
-            hair.setPosition(position);
+    charSprite(const sf::Vector2f& position,
+        charLook look = { 0, 0, 0,
+                         sf::Color(0,0,0),
+                         sf::Color(0,0,0),
+                         sf::Color(0,0,0),
+                         sf::Color(0,0,0) })
+    {
+        initPart(shoes.part, shoes.tex);
+        initPart(pants.part, pants.tex);
+        initPart(shirt.part, shirt.tex);
+        initPart(fingers.part, fingers.tex);
+        initPart(handBG.part, handBG.tex);
+        initPart(handFG.part, handFG.tex);
+        initPart(head.part, head.tex);
+        initPart(hair.part, hair.tex);
+        initPart(face.part, face.tex);
+        initPart(hat.part, hat.tex);
+
+        if (look.hairID > 0) {
+            hasHair = loadAndSetup(hair, std::format("assets/img/sprites/hair/hair{}.png", look.hairID));
+            if (hasHair) hair.part.setFillColor(look.hairColor);
         }
 
-        if (charLook.faceID > 0) {
-            hasFace = true;
-            faceTxt.loadFromFile(std::format("assets/img/sprites/face/face{}.png", charLook.faceID));
-            face.setOrigin({ 157.0 / 2, 354.0 / 2 });
-            face.setTexture(&faceTxt);
-            face.setPosition(position);
+        if (look.faceID > 0) {
+            hasFace = loadAndSetup(face, std::format("assets/img/sprites/face/face{}.png", look.faceID));
         }
 
-        if (charLook.hatID > 0) {
-            hasHat = true;
-            hatTxt.loadFromFile(std::format("assets/img/sprites/hat/hat{}.png", charLook.hatID));
-            hat.setOrigin({ 157.0 / 2, 354.0 / 2 });
-            hat.setTexture(&hatTxt);
-            hat.setPosition(position);
+        if (look.hatID > 0) {
+            hasHat = loadAndSetup(hat, std::format("assets/img/sprites/hat/hat{}.png", look.hatID));
         }
 
-        shoesTxt.loadFromFile("assets/img/sprites/shoes.png");
-        shoes.setTexture(&shoesTxt);
-        shoes.setOrigin({ 157.0 / 2, 354.0 / 2 });
-        shoes.setFillColor(charLook.shoeColor);
-        shoes.setPosition(position);
+        loadAndSetup(shoes, "assets/img/sprites/shoes.png");
+        shoes.part.setFillColor(look.shoeColor);
 
-        pantsTxt.loadFromFile("assets/img/sprites/pants.png");
-        pants.setOrigin({ 157.0 / 2, 354.0 / 2 });
-        pants.setTexture(&pantsTxt);
-        pants.setFillColor(charLook.pantsColor);
-        pants.setPosition(position);
+        loadAndSetup(pants, "assets/img/sprites/pants.png");
+        pants.part.setFillColor(look.pantsColor);
 
-        shirtTxt.loadFromFile("assets/img/sprites/shirt.png");
-        shirt.setOrigin({ 157.0 / 2, 354.0 / 2 });
-        shirt.setTexture(&shirtTxt);
-        shirt.setFillColor(charLook.topColor);
-        shirt.setPosition(position);
+        loadAndSetup(shirt, "assets/img/sprites/shirt.png");
+        shirt.part.setFillColor(look.topColor);
 
-        fingersTxt.loadFromFile("assets/img/sprites/fingers.png");
-        fingers.setOrigin({ 157.0 / 2, 354.0 / 2 });
-        fingers.setTexture(&fingersTxt);
-        fingers.setPosition(position);
+        loadAndSetup(fingers, "assets/img/sprites/fingers.png");
+        loadAndSetup(handBG, "assets/img/sprites/handbg.png");
+        loadAndSetup(handFG, "assets/img/sprites/handfg.png");
+        loadAndSetup(head, "assets/img/sprites/head.png");
 
-        handBGTxt.loadFromFile("assets/img/sprites/handbg.png");
-        handBG.setOrigin({ 157.0 / 2, 354.0 / 2 });
-        handBG.setTexture(&handBGTxt);
-        handBG.setPosition(position);
-
-        handFGTxt.loadFromFile("assets/img/sprites/handfg.png");
-        handFG.setOrigin({ 157.0 / 2, 354.0 / 2 });
-        handFG.setTexture(&handFGTxt);
-        handFG.setPosition(position);
-
-        headTxt.loadFromFile("assets/img/sprites/head.png");
-        head.setOrigin({ 157.0 / 2, 354.0 / 2 });
-        head.setTexture(&headTxt);
-        head.setPosition(position);
+        setPos(position.x, position.y);
     }
+
     // -1 - facing left, 1 - facing right
-    int facing = 1.f;
+
+    int facing = 1;
 
     void draw(sf::RenderWindow& window) {
-        window.draw(shoes);
-        window.draw(pants);
-        window.draw(handBG);
-        window.draw(shirt);
-        window.draw(fingers);
-        window.draw(handFG);
-        window.draw(head);
-        if (hasFace) window.draw(face);
-        if (hasHair) window.draw(hair);
-        if (hasHat) window.draw(hat);
+        window.draw(shoes.part);
+        window.draw(pants.part);
+        window.draw(handBG.part);
+        window.draw(shirt.part);
+        window.draw(fingers.part);
+        window.draw(handFG.part);
+        window.draw(head.part);
+        if (hasFace) window.draw(face.part);
+        if (hasHair) window.draw(hair.part);
+        if (hasHat) window.draw(hat.part);
+    }
 
-    }
     void setPos(float x, float y) {
-        shoes.setPosition(sf::Vector2f(x, y));
-        pants.setPosition(sf::Vector2f(x, y));
-        shirt.setPosition(sf::Vector2f(x, y));
-        fingers.setPosition(sf::Vector2f(x, y));
-        handBG.setPosition(sf::Vector2f(x, y));
-        handFG.setPosition(sf::Vector2f(x, y));
-        head.setPosition(sf::Vector2f(x, y));
-        hair.setPosition(sf::Vector2f(x, y));
-        face.setPosition(sf::Vector2f(x, y));
-        hat.setPosition(sf::Vector2f(x, y));
+        const sf::Vector2f pos{ x, y };
+        shoes.part.setPosition(pos);
+        pants.part.setPosition(pos);
+        shirt.part.setPosition(pos);
+        fingers.part.setPosition(pos);
+        handBG.part.setPosition(pos);
+        handFG.part.setPosition(pos);
+        head.part.setPosition(pos);
+        hair.part.setPosition(pos);
+        face.part.setPosition(pos);
+        hat.part.setPosition(pos);
     }
-    
-    // -1 - facing left, 1 - facing right
+
+    // flip horizontally; optional dir: 1 = right, -1 = left
     void flip(int dir = 0) {
-        facing = dir ? dir : -1 * facing;
-        sf::Vector2f direction = { (float)facing, 1.f };
-        shoes.setScale(direction);
-        pants.setScale(direction);
-        shirt.setScale(direction);
-        fingers.setScale(direction);
-        handBG.setScale(direction);
-        handFG.setScale(direction);
-        head.setScale(direction);
-        hair.setScale(direction);
-        face.setScale(direction);
-        hat.setScale(direction);
+        facing = dir ? dir : -facing;
+        sf::Vector2f direction = { static_cast<float>(facing), 1.f };
+        shoes.part.setScale(direction);
+        pants.part.setScale(direction);
+        shirt.part.setScale(direction);
+        fingers.part.setScale(direction);
+        handBG.part.setScale(direction);
+        handFG.part.setScale(direction);
+        head.part.setScale(direction);
+        hair.part.setScale(direction);
+        face.part.setScale(direction);
+        hat.part.setScale(direction);
     }
 
 private:
-    sf::RectangleShape parts;
-    sf::RectangleShape shoes;
-    sf::RectangleShape pants;
-    sf::RectangleShape shirt;
-    sf::RectangleShape fingers;
-    sf::RectangleShape handBG;
-    sf::RectangleShape handFG;
-    sf::RectangleShape head;
-    sf::RectangleShape hair;
-    sf::RectangleShape face;
-    sf::RectangleShape hat;
-    
+    struct Part {
+        sf::RectangleShape part{ PartSize };
+        sf::Texture tex;
+    };
 
-    sf::Texture pantsTxt;
-    sf::Texture shoesTxt;
-    sf::Texture shirtTxt;
-    sf::Texture fingersTxt;
-    sf::Texture handBGTxt;
-    sf::Texture handFGTxt;
-    sf::Texture headTxt;
-    sf::Texture hairTxt;
-    sf::Texture faceTxt;
-    sf::Texture hatTxt;
+    Part shoes;
+    Part pants;
+    Part shirt;
+    Part fingers;
+    Part handBG;
+    Part handFG;
+    Part head;
+    Part hair;
+    Part face;
+    Part hat;
 
-    bool hasHair = false;
-    bool hasFace = false;
-    bool hasHat = false;
+    bool hasHair{ false };
+    bool hasFace{ false };
+    bool hasHat{ false };
+
+    void initPart(sf::RectangleShape& shape, const sf::Texture&) {
+        shape.setSize(PartSize);
+        shape.setOrigin({ PartSize.x / 2.f, PartSize.y / 2.f });
+    }
+    bool loadAndSetup(Part& p, const std::string& path) {
+        if (p.tex.loadFromFile(path)) {
+            p.part.setTexture(&p.tex);
+            return true;
+        }
+        return false;
+    }
 };
 
 

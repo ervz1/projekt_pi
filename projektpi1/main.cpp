@@ -355,7 +355,9 @@ void logic(GameState &currentState, GameStart &game,
         ball2.setPosition({game.bot_ball_x, game.ball_y});
 
         playerSP.setPos(game.graczX, game.graczY);
+        playerSP.flip(-1);
         enemySP.setPos(game.botX, game.botY);
+        enemySP.flip(1);
     };
 
     // ESC: reset do menu

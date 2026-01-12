@@ -154,10 +154,14 @@ int main()
     // Obiekty - puszki
     sf::CircleShape can(15.f);
     can.setFillColor(sf::Color::Yellow);
-    can.setPosition({ 400.f, 300.f });
+    can.setPosition({ 400.f, 500.f });
 
-    canSprite ball({0.f, 0.f}, sf::Color::Blue);
-    canSprite ball2({ 0.f, 0.f }, sf::Color::Red);
+
+    canSprite ball({game.ball_x, game.ball_y}, sf::Color::Blue);
+    ball.setPosition({ game.ball_x, game.ball_y });
+    canSprite ball2({ game.bot_ball_x, game.ball_y}, sf::Color::Red);
+    ball2.setPosition({ game.bot_ball_x, game.ball_y });
+
 
     sf::Sound sound(buffer);
 
@@ -212,6 +216,8 @@ int main()
     levelDisplay.setStyle(sf::Text::Bold);
     levelDisplay.setFillColor(sf::Color::Red);
     levelDisplay.setPosition({ 300, 110 });
+
+
 
 
     // fizyka i czas
@@ -411,7 +417,7 @@ void logic(GameState &currentState, GameStart &game,
         const float targetX = game.graczWraca ? game.graczHomeX : midPlayerX;
         const float dir     = (targetX > game.graczX) ? 1.f : -1.f;
 
-        game.graczX += dir * PLAYER_RUN_STEP;
+        game.graczX += dir * PLAYER_RUN_STEP * 2;
 
         const bool reached =
             (dir > 0.f && game.graczX >= targetX) ||
@@ -440,7 +446,7 @@ void logic(GameState &currentState, GameStart &game,
         const float dir     = (targetX > game.botX) ? 1.f : -1.f;
 
         const float v = BOT_SPEED_BASE * game.botRunSpeed;
-        game.botX += dir * v * dt;
+        game.botX += dir * v * dt * 2;
 
         const bool reached =
             (dir > 0.f && game.botX >= targetX) ||
@@ -481,12 +487,15 @@ void logic(GameState &currentState, GameStart &game,
     }
 
     // ===== 5 PUNKTY =====
-    if (game.enemyDrink >= DRINK_MAX) {
-        game.scoreBot++;
-        game.round++;
+    if (game.enemyDrink >= 30) {
+        /*game.scoreBot++;
+        game.round++;*/
+        
+        //Jak bot wygra powinien byc koniec gry
+
         resetRound();
     }
-    else if (game.myDrink >= DRINK_MAX) {
+    else if (game.myDrink >= 75) {
         game.scorePlayer++;
         game.round++;
         resetRound();
@@ -614,11 +623,11 @@ void bounce(canSprite &ball, sf::CircleShape &can, GameStart &game, sf::Sound &s
 
 void drinkCounter(GameStart& game, greyBar &visBar)
 {
-    constexpr int DRINK_MAX = 30;
+    constexpr int DRINK_MAX = 75;
     if (game.myDrink >= DRINK_MAX) return;
 
     game.myDrink++;
-    visBar.move({0.f, -5.f});
+    visBar.move({0.f, -2.f});
 }
 
 void drinkCounterEnemy(GameStart& game, greyBar& visEnemyBar)

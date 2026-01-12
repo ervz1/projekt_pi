@@ -3,6 +3,9 @@
 #include <iostream>
 #pragma once
 #include <cmath>
+#include <sstream>
+#include <iomanip>
+
 // tu wszystkie funkcje i klasy
 static void updateViewViewport(const sf::RenderWindow& window, sf::View& view) {
     float winW = static_cast<float>(window.getSize().x);
@@ -63,6 +66,8 @@ public:
         window.draw(can);
         window.draw(canBG);
     }
+
+
 private:
     sf::RectangleShape can;
     sf::RectangleShape canBG;
@@ -94,16 +99,22 @@ public:
         initPart(hat.part, hat.tex);
 
         if (look.hairID > 0) {
-            hasHair = loadAndSetup(hair, std::format("assets/img/sprites/hair/hair{}.png", look.hairID));
+            std::stringstream ss;
+            ss << "assets/img/sprites/hair/hair" <<  look.hairID << ".png";
+            hasHair = loadAndSetup(hair, ss.str());
             if (hasHair) hair.part.setFillColor(look.hairColor);
         }
 
         if (look.faceID > 0) {
-            hasFace = loadAndSetup(face, std::format("assets/img/sprites/face/face{}.png", look.faceID));
+            std::stringstream ss;
+            ss << "assets/img/sprites/face/face" <<  look.faceID << ".png";
+            hasFace = loadAndSetup(face, ss.str());
         }
 
         if (look.hatID > 0) {
-            hasHat = loadAndSetup(hat, std::format("assets/img/sprites/hat/hat{}.png", look.hatID));
+            std::stringstream ss;
+            ss << "assets/img/sprites/hat/hat" << look.hatID << ".png";
+            hasHat = loadAndSetup(hat, ss.str());
         }
 
         loadAndSetup(shoes, "assets/img/sprites/shoes.png");
@@ -170,6 +181,50 @@ public:
         hat.part.setScale(direction);
     }
 
+    void changeLook(charLook newLook){
+        if (newLook.hairID > 0) {
+            std::stringstream ss;
+            ss << "assets/img/sprites/hair/hair" << newLook.hairID << ".png";
+            hasHair = loadAndSetup(hair, ss.str());
+            if (hasHair) hair.part.setFillColor(newLook.hairColor);
+        }
+        else {
+            hasHair = false;
+        }
+
+        if (newLook.faceID > 0) {
+            std::stringstream ss;
+            ss << "assets/img/sprites/face/face" << newLook.faceID << ".png";
+            hasFace = loadAndSetup(face, ss.str());
+        }
+        else {
+            hasFace = false;
+        }
+
+        if (newLook.hatID > 0) {
+            std::stringstream ss;
+            ss << "assets/img/sprites/hat/hat" << newLook.hatID << ".png";
+            hasHat = loadAndSetup(hat, ss.str());
+        }
+        else {
+            hasHat = false;
+        }
+
+        loadAndSetup(shoes, "assets/img/sprites/shoes.png");
+        shoes.part.setFillColor(newLook.shoeColor);
+
+        loadAndSetup(pants, "assets/img/sprites/pants.png");
+        pants.part.setFillColor(newLook.pantsColor);
+
+        loadAndSetup(shirt, "assets/img/sprites/shirt.png");
+        shirt.part.setFillColor(newLook.topColor);
+
+        loadAndSetup(fingers, "assets/img/sprites/fingers.png");
+        loadAndSetup(handBG, "assets/img/sprites/handbg.png");
+        loadAndSetup(handFG, "assets/img/sprites/handfg.png");
+        loadAndSetup(head, "assets/img/sprites/head.png");
+    }
+
 private:
     struct Part {
         sf::RectangleShape part{ PartSize };
@@ -198,8 +253,10 @@ private:
     bool loadAndSetup(Part& p, const std::string& path) {
         if (p.tex.loadFromFile(path)) {
             p.part.setTexture(&p.tex);
+            std::cout << path << std::endl;
             return true;
         }
+
         return false;
     }
 };
@@ -306,3 +363,19 @@ public:
         //}
     }
 };
+
+
+charLook randomChar() {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis4(0, 4);
+    std::uniform_real_distribution<> dis5(0, 11);
+    std::uniform_real_distribution<> dis6(0, 5);
+    std::uniform_real_distribution<> dis7(0, 256);
+    int hat = dis4(gen);
+    int hair = dis5(gen);
+    int face = dis6(gen);
+    int color1 = dis7(gen);
+    charLook charCharacter = { hat, hair, face, sf::Color(dis7(gen), dis7(gen), dis7(gen)), sf::Color(dis7(gen), dis7(gen), dis7(gen)), sf::Color(dis7(gen), dis7(gen), dis7(gen)), sf::Color(dis7(gen), dis7(gen), dis7(gen)) };
+    return charCharacter;
+}

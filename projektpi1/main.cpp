@@ -158,8 +158,6 @@ int main()
     can.setFillColor(sf::Color::Yellow);
     can.setPosition({ 400.f, 550.f });
 
-    sf::Texture throwcanTxt;
-    throwcanTxt.loadFromFile("assets/img/throwcan.png");
 
     canSprite ball({game.ball_x, game.ball_y}, sf::Color::Blue);
     ball.setPosition({ game.ball_x, game.ball_y });

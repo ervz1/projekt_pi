@@ -7,8 +7,6 @@
 #include <ctime>
 #include <random>
 #include <fstream>
-#include <chrono>
-#include <thread>
 #include "helper.hpp"
 #include <cmath> 
 
@@ -40,8 +38,8 @@ struct GameStart {
     float maxCharge = 800.0f;
 
     float bot_ball_x = 100.f;
-    float ball_x = 700.f;
-    float ball_y = 200.f;
+    float ball_x = 658.f;
+    float ball_y = 400.f;
 
     bool turn = false;
 
@@ -55,9 +53,9 @@ struct GameStart {
     bool isSpaceActive = false;
 
     float graczX = 750.f;
-    float graczY = 215.f;
+    float graczY = 415.f;
     float botX   = 50.f;
-    float botY   = 215.f;
+    float botY   = 415.f;
 
     bool graczBiegnie = false;
     bool botBiegnie   = false;
@@ -154,7 +152,7 @@ int main()
     // Obiekty - puszki
     sf::CircleShape can(15.f);
     can.setFillColor(sf::Color::Yellow);
-    can.setPosition({ 400.f, 500.f });
+    can.setPosition({ 400.f, 550.f });
 
     sf::Texture throwcanTxt;
     throwcanTxt.loadFromFile("assets/img/throwcan.png");
@@ -256,7 +254,7 @@ int main()
 
         window.display();
 
-        std::cout
+        /*std::cout
         << "\033[2J\033[H"
         << "turn=" << game.turn
         << " flying=" << game.isFlying
@@ -264,7 +262,7 @@ int main()
         << " botBiegnie=" << game.botBiegnie
         << " charging=" << game.isCharging
         << " up=" << game.up << " left=" << game.left
-        << "\n";
+        << "\n";*/
     }
 }
 
@@ -375,8 +373,17 @@ void logic(GameState &currentState, GameStart &game,
     // ===== 1 RZUT / ŁADOWANIE =====
     if (!game.isFlying && !game.graczBiegnie && !game.botBiegnie && !game.graczPije && !game.botPije)
     {
-        if (!game.turn) rzutGracz(game, ramp_up);
-        else            rzutBot(can, ball2, gravity, game, level);
+        if (!game.turn) { 
+
+            ball.setPosition({ game.ball_x, game.ball_y });
+            
+            rzutGracz(game, ramp_up);
+        }
+        else
+        {
+            ball2.setPosition({ game.bot_ball_x, game.ball_y });
+            rzutBot(can, ball2, gravity, game, level);
+        }
     }
 
     // ===== 2 LOT =====
@@ -420,6 +427,7 @@ void logic(GameState &currentState, GameStart &game,
         const float dir     = (targetX > game.graczX) ? 1.f : -1.f;
 
         game.graczX += dir * PLAYER_RUN_STEP * 2;
+        
 
         const bool reached =
             (dir > 0.f && game.graczX >= targetX) ||
@@ -511,6 +519,10 @@ void odbicie(canSprite &ball, float pozycja_x, GameStart &game, float dt, sf::Ci
     groundReset(ball, game, pozycja_x); // reset po odbiciu
 }
 
+
+
+std::clock_t start_bot_delay = std::clock();
+
 void rzutBot(sf::CircleShape &can, canSprite &ball2, float gravity, GameStart &game, int &level)
 {
 
@@ -519,9 +531,9 @@ void rzutBot(sf::CircleShape &can, canSprite &ball2, float gravity, GameStart &g
     std::uniform_real_distribution<> dis(185.0f, 800.0f);
     float margin;
 
-    if (level < 7)
+    if (game.round < 7)
     {
-        std::uniform_real_distribution<> dis2(-160.0f + (10 * level), 160.0f - (10 * level));
+        std::uniform_real_distribution<> dis2(-200.0f + (10 * game.round), 200.0f - (10 * game.round));
         margin = dis2(gen);
     }
     else {
@@ -530,7 +542,7 @@ void rzutBot(sf::CircleShape &can, canSprite &ball2, float gravity, GameStart &g
     }
 
     float random_x = dis(gen);
-
+    
     // Flight trajectory math
     //  t = Distance/Vx
     // Height = (Vy​*t)−(1/2​*Gravity*t^2)
@@ -613,8 +625,9 @@ void bounce(canSprite &ball, sf::CircleShape &can, GameStart &game, sf::Sound &s
 {
     if (ball.getGlobalBounds().findIntersection(can.getGlobalBounds()) && !game.hasHit)
     {
-        game.velocity.x = -game.velocity.x;
-        game.velocity.y = -game.velocity.y;
+        //game.velocity.x = -game.velocity.x * 0.1;
+        game.velocity.y = -100.f;
+        game.velocity.x = - (can.getPosition().x - ball.getPosition().x) * 3;
 
         can.setFillColor(sf::Color::Magenta);
 
@@ -643,11 +656,16 @@ void drinkCounterEnemy(GameStart& game, greyBar& visEnemyBar)
 
 void groundReset(canSprite &ball, GameStart &game, float ball_x)
 {
-    if (ball.getPosition().y > 600.f)
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis3(555.0f, 570.0f);
+    float rand = dis3(gen);
+    if (ball.getPosition().y > rand)
     {
         game.isFlying = false;
         game.velocity = {0.f, 0.f};
-        ball.setPosition({ball_x, game.ball_y});
+        //ball.setPosition({ball_x, game.ball_y});
         game.turn = !game.turn;
     }
 

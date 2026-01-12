@@ -22,7 +22,11 @@ sf::Vector2f playerBasePos = sf::Vector2f({ 750.0, 215.0 });
 
 charLook playerChar = { 1, 2, 4, sf::Color(255, 0, 0), sf::Color(0, 255, 0), sf::Color(0, 0, 255), sf::Color(255, 255, 0) };
 charSprite playerSP(playerBasePos, playerChar);
-charLook enemyChar = { 2, 1, 3, sf::Color(0, 200, 255), sf::Color(255, 80, 80), sf::Color(200, 200, 200), sf::Color(80, 255, 120) };
+
+std::random_device rd;
+std::mt19937 gen(rd());
+
+charLook enemyChar = randomChar();
 charSprite enemySP(enemyBasePos, enemyChar);
 
 
@@ -48,7 +52,7 @@ struct GameStart {
 
     sf::Vector2f initialVelocity;
 
-    int myDrink = 0;
+    int myDrink = 74;
     int enemyDrink = 0;
     bool isSpaceActive = false;
 
@@ -508,6 +512,7 @@ void logic(GameState &currentState, GameStart &game,
     else if (game.myDrink >= 75) {
         game.scorePlayer++;
         game.round++;
+        enemySP.changeLook(randomChar());
         resetRound();
     }
 }
@@ -517,6 +522,7 @@ void odbicie(canSprite &ball, float pozycja_x, GameStart &game, float dt, sf::Ci
     ball.move(game.velocity * dt);        // ruch puszki
     bounce(ball, can, game, sound);       // odbicie
     groundReset(ball, game, pozycja_x); // reset po odbiciu
+
 }
 
 
@@ -526,8 +532,7 @@ std::clock_t start_bot_delay = std::clock();
 void rzutBot(sf::CircleShape &can, canSprite &ball2, float gravity, GameStart &game, int &level)
 {
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    
     std::uniform_real_distribution<> dis(185.0f, 800.0f);
     float margin;
 
@@ -657,8 +662,6 @@ void drinkCounterEnemy(GameStart& game, greyBar& visEnemyBar)
 void groundReset(canSprite &ball, GameStart &game, float ball_x)
 {
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis3(555.0f, 570.0f);
     float rand = dis3(gen);
     if (ball.getPosition().y > rand)
@@ -666,7 +669,7 @@ void groundReset(canSprite &ball, GameStart &game, float ball_x)
         game.isFlying = false;
         game.velocity = {0.f, 0.f};
         //ball.setPosition({ball_x, game.ball_y});
-        game.turn = !game.turn;
+        game.turn = !game.turn; 
     }
 
 }

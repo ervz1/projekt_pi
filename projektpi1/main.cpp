@@ -87,20 +87,20 @@ struct GameStart {
     bool graczFacingRight = true;
 };
 
-void logic(GameState &currentState, GameStart &game, canSprite &ball, sf::CircleShape &can, float ramp_up, canSprite &ball2, float gravity,
+void logic(GameState &currentState, GameStart &game, canSprite &ball, middleCanSprite &can, float ramp_up, canSprite &ball2, float gravity,
     float dt, sf::Sound &sound, greyBar &visBar, int &level, sf::Text &levelDisplay, greyBar& visEnemyBar);
 
-void odbicie(canSprite &ball, float pozycja_x, GameStart &game, float dt, sf::CircleShape &can, sf::Sound &sound);
+void odbicie(canSprite &ball, float pozycja_x, GameStart &game, float dt, middleCanSprite&can, sf::Sound &sound);
 
-void rzutBot(sf::CircleShape &can, canSprite &ball2, float gravity, GameStart &game, int& level);
+void rzutBot(middleCanSprite &can, canSprite &ball2, float gravity, GameStart &game, int& level);
 
 void rzutGracz(GameStart &game, float ramp_up);
 
-void bounce(canSprite &ball, sf::CircleShape &can, GameStart &game, sf::Sound &sound);
+void bounce(canSprite &ball, middleCanSprite&can, GameStart &game, sf::Sound &sound);
 
 void groundReset(canSprite &ball, GameStart &game, float ball_x);
 
-void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, canSprite &ball, sf::CircleShape &can, canSprite &ball2, GameStart &game, sf::Text &aim, sf::Text &move, sf::Text &drink, QTEbar &drinkBar, greyBar &visBar, sf::Text &levelDisplay, QTEbar& enemyBar, greyBar& visEnemyBar, sf::Text scoreText, sf::Text roundText);
+void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, canSprite &ball, middleCanSprite &can, canSprite &ball2, GameStart &game, sf::Text &aim, sf::Text &move, sf::Text &drink, QTEbar &drinkBar, greyBar &visBar, sf::Text &levelDisplay, QTEbar& enemyBar, greyBar& visEnemyBar, sf::Text scoreText, sf::Text roundText);
 
 void drawBars(GameStart &game, canSprite &ball, sf::RenderWindow &window);
 
@@ -154,9 +154,12 @@ int main()
     logicalBackground.setTexture(&mainMenuBG);
 
     // Obiekty - puszki
-    sf::CircleShape can(15.f);
+    /*sf::CircleShape can(15.f);
     can.setFillColor(sf::Color::Yellow);
-    can.setPosition({ 400.f, 550.f });
+    can.setPosition({ 400.f, 550.f });*/
+
+    middleCanSprite can({ 400.f, 500.f + 74.f });
+    can.setPosition({ 400.f, 500.f + 74.f });
 
 
     canSprite ball({game.ball_x, game.ball_y}, sf::Color::Blue);
@@ -167,7 +170,7 @@ int main()
 
     sf::Sound sound(buffer);
 
-    // Punkty
+    // Punktyq
 
     sf::Text scoreText(font, "", 18);
     scoreText.setFillColor(sf::Color::White);
@@ -319,7 +322,7 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
 
 
 void logic(GameState &currentState, GameStart &game,
-           canSprite &ball, sf::CircleShape &can,
+           canSprite &ball, middleCanSprite &can,
            float ramp_up, canSprite &ball2,
            float gravity, float dt, sf::Sound &sound,
            greyBar &visBar, int &level, sf::Text &levelDisplay,
@@ -353,7 +356,7 @@ void logic(GameState &currentState, GameStart &game,
         enemySP.changeLook(randomChar());
         visBar.setPosition({645 + 100, 540});
         visEnemyBar.setPosition({145 - 100, 540});
-        can.setFillColor(sf::Color::Yellow);
+        //can.setFillColor(sf::Color::Yellow);
 
         ball.setPosition({game.ball_x, game.ball_y});
         ball2.setPosition({game.bot_ball_x, game.ball_y});
@@ -362,6 +365,8 @@ void logic(GameState &currentState, GameStart &game,
         playerSP.flip(-1);
         enemySP.setPos(game.botX, game.botY);
         enemySP.flip(1);
+        can.standUp();
+        
     };
 
     // ESC: reset do menu
@@ -399,6 +404,7 @@ void logic(GameState &currentState, GameStart &game,
         // event trafienia przychodzi z bounce
         if (game.hitEvent)
         {
+
             if (!game.turn) {
                 game.botBiegnie = true;
                 game.botWraca = false;
@@ -407,6 +413,7 @@ void logic(GameState &currentState, GameStart &game,
 
                 game.graczPije = true;
                 game.botPije = false;
+                can.rotateLeft();
             } else {
                 game.graczBiegnie = true;
                 game.graczWraca = false;
@@ -414,6 +421,7 @@ void logic(GameState &currentState, GameStart &game,
                 game.botPije = true;
                 game.graczPije = false;
                 game.botDrinkAcc = 0.f;
+                can.rotateRight();
             }
 
             game.hitEvent = false; // zużyte
@@ -441,6 +449,8 @@ void logic(GameState &currentState, GameStart &game,
             if (!game.graczWraca) {
                 playerSP.flip();
                 game.graczWraca = true;
+                //can.rotate();
+                can.standUp();
             } else {
                 playerSP.flip();
                 game.graczWraca   = false;
@@ -471,6 +481,8 @@ void logic(GameState &currentState, GameStart &game,
             {
                 game.botWraca = true;
                 enemySP.flip();
+                //can.rotate2();
+                can.standUp();
             }
             else {
                 enemySP.flip();
@@ -515,7 +527,7 @@ void logic(GameState &currentState, GameStart &game,
     }
 }
 
-void odbicie(canSprite &ball, float pozycja_x, GameStart &game, float dt, sf::CircleShape &can, sf::Sound &sound)
+void odbicie(canSprite &ball, float pozycja_x, GameStart &game, float dt, middleCanSprite&can, sf::Sound &sound)
 {
     ball.move(game.velocity * dt);        // ruch puszki
     bounce(ball, can, game, sound);       // odbicie
@@ -527,10 +539,15 @@ void odbicie(canSprite &ball, float pozycja_x, GameStart &game, float dt, sf::Ci
 
 std::clock_t start_bot_delay = 0;
 
-void rzutBot(sf::CircleShape &can, canSprite &ball2, float gravity, GameStart &game, int &level)
+
+
+void rzutBot(middleCanSprite&can, canSprite &ball2, float gravity, GameStart &game, int &level)
 {
 
     
+    if (!start_bot_delay)
+        start_bot_delay = clock();
+
     std::uniform_real_distribution<> dis(185.0f, 800.0f);
     float margin;
 
@@ -622,15 +639,16 @@ void rzutGracz(GameStart &game, float ramp_up)
     }
 }
 
-void bounce(canSprite &ball, sf::CircleShape &can, GameStart &game, sf::Sound &sound)
+void bounce(canSprite &ball, middleCanSprite&can, GameStart &game, sf::Sound &sound)
 {
     if (ball.getGlobalBounds().findIntersection(can.getGlobalBounds()) && !game.hasHit)
     {
         //game.velocity.x = -game.velocity.x * 0.1;
         game.velocity.y = -100.f;
         game.velocity.x = - (can.getPosition().x - ball.getPosition().x) * 3;
+        
 
-        can.setFillColor(sf::Color::Magenta);
+        //can.setFillColor(sf::Color::Magenta);
 
         game.hasHit   = true;   // blokada na resztę lotu
         game.hitEvent = true;   // JEDNORAZOWY event do logic()
@@ -671,7 +689,7 @@ void groundReset(canSprite &ball, GameStart &game, float ball_x)
 }
 
 void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& window,
-    Button& exitButton, canSprite& ball, sf::CircleShape& can,
+    Button& exitButton, canSprite& ball, middleCanSprite& can,
     canSprite& ball2, GameStart& game,
     sf::Text& aim, sf::Text& move, sf::Text& drink, QTEbar &drinkBar, greyBar &visBar, sf::Text &levelDisplay, QTEbar& enemyBar, greyBar& visEnemyBar, sf::Text scoreText, sf::Text roundText)
 {
@@ -686,7 +704,7 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
         window.draw(roundText);
 
         ball.draw(window);
-        window.draw(can);
+        can.draw(window);
         ball2.draw(window);
         
         enemySP.draw(window);

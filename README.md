@@ -37,7 +37,7 @@
 | --- | --- |
 | Rzut puszką | Strzałkami ustawiam wektory rzutu |
 | Nietrafienie puszki | Brak akcji |
-| Przyznanie punktu przeciwnikowi | Dodanie pktu dla komputera |
+| Przyznanie punktu przeciwnikowi |  |
 | Zakończenie mojej tury | -- |
 
 ##

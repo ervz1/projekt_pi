@@ -44,3 +44,6 @@ x86/
 *.recipe
 *.exe
 *.dll
+
+build/*
+!build/gpp_build.sh

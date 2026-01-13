@@ -11,18 +11,25 @@
 #include <cmath> 
 
 
+
 sf::Vector2f mainWin = { 800.0f, 600.0f };
 void updateViewViewport(const sf::RenderWindow&, sf::View&);
 enum class GameState { Menu, Game, GameMenu };
 std::string buttText = "assets/img/button.png";
-
+sf::Texture mainMenuBG;
+sf::Texture gameBG;
+sf::RectangleShape logicalBackground(mainWin);
 
 sf::Vector2f enemyBasePos = sf::Vector2f({ 50.0, 215.0 });
 sf::Vector2f playerBasePos = sf::Vector2f({ 750.0, 215.0 });
 
 charLook playerChar = { 1, 2, 4, sf::Color(255, 0, 0), sf::Color(0, 255, 0), sf::Color(0, 0, 255), sf::Color(255, 255, 0) };
 charSprite playerSP(playerBasePos, playerChar);
-charLook enemyChar = { 2, 1, 3, sf::Color(0, 200, 255), sf::Color(255, 80, 80), sf::Color(200, 200, 200), sf::Color(80, 255, 120) };
+
+std::random_device rd;
+std::mt19937 gen(rd());
+
+charLook enemyChar = randomChar();
 charSprite enemySP(enemyBasePos, enemyChar);
 
 
@@ -140,12 +147,9 @@ int main()
     Button exitButton({ 254.f, 104.f }, { 273.f, 400.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), "WYJSCIE", font, 30, buttText);
 
     // Tło
-    sf::Texture mainMenuBG;
     if (!mainMenuBG.loadFromFile("assets/img/mainmenu.png")) return -1;
-    sf::Texture gameBG;
     if (!gameBG.loadFromFile("assets/img/gamebg.png")) return -1;
 
-    sf::RectangleShape logicalBackground(mainWin);
     logicalBackground.setPosition({ 0.f, 0.f });
     logicalBackground.setTexture(&mainMenuBG);
 
@@ -319,10 +323,9 @@ void logic(GameState &currentState, GameStart &game,
            float ramp_up, canSprite &ball2,
            float gravity, float dt, sf::Sound &sound,
            greyBar &visBar, int &level, sf::Text &levelDisplay,
-           greyBar &visEnemyBar)
+           greyBar &visEnemyBar) 
 {
     if (currentState != GameState::Game) return;
-
     const int   DRINK_MAX         = 30;
     const float MID_OFFSET        = 60.f;   // żeby nie wchodzili w puszkę
     const float PLAYER_RUN_STEP   = 10.f;   // px na jedno kliknięcie spacji
@@ -347,7 +350,7 @@ void logic(GameState &currentState, GameStart &game,
         game.scorePlayer = keepP;
         game.scoreBot    = keepB;
         game.round       = keepR;
-
+        enemySP.changeLook(randomChar());
         visBar.setPosition({645 + 100, 540});
         visEnemyBar.setPosition({145 - 100, 540});
         can.setFillColor(sf::Color::Yellow);
@@ -363,6 +366,7 @@ void logic(GameState &currentState, GameStart &game,
 
     // ESC: reset do menu
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Escape)) {
+        logicalBackground.setTexture(&mainMenuBG);
         currentState = GameState::Menu;
         resetRound();
         return;
@@ -506,6 +510,7 @@ void logic(GameState &currentState, GameStart &game,
     else if (game.myDrink >= 75) {
         game.scorePlayer++;
         game.round++;
+        enemySP.changeLook(randomChar());
         resetRound();
     }
 }
@@ -515,6 +520,7 @@ void odbicie(canSprite &ball, float pozycja_x, GameStart &game, float dt, sf::Ci
     ball.move(game.velocity * dt);        // ruch puszki
     bounce(ball, can, game, sound);       // odbicie
     groundReset(ball, game, pozycja_x); // reset po odbiciu
+
 }
 
 
@@ -523,9 +529,8 @@ std::clock_t start_bot_delay = 0;
 
 void rzutBot(sf::CircleShape &can, canSprite &ball2, float gravity, GameStart &game, int &level)
 {
-    if (!start_bot_delay) start_bot_delay = std::clock();
-    std::random_device rd;
-    std::mt19937 gen(rd());
+
+    
     std::uniform_real_distribution<> dis(185.0f, 800.0f);
     float margin;
 
@@ -653,8 +658,6 @@ void drinkCounterEnemy(GameStart& game, greyBar& visEnemyBar)
 void groundReset(canSprite &ball, GameStart &game, float ball_x)
 {
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis3(555.0f, 570.0f);
     float rand = dis3(gen);
     if (ball.getPosition().y > rand)
@@ -662,7 +665,7 @@ void groundReset(canSprite &ball, GameStart &game, float ball_x)
         game.isFlying = false;
         game.velocity = {0.f, 0.f};
         //ball.setPosition({ball_x, game.ball_y});
-        game.turn = !game.turn;
+        game.turn = !game.turn; 
     }
 
 }

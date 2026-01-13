@@ -3,7 +3,74 @@
 #include <iostream>
 #pragma once
 #include <cmath>
+#include <sstream>
+#include <iomanip>
+
 // tu wszystkie funkcje i klasy
+
+sf::Color clothesPalette[24] = {
+    sf::Color(38,38,38),
+    sf::Color(111, 21, 110),
+    sf::Color(72, 21, 111),
+    sf::Color(21, 65, 111),
+    sf::Color(21, 111, 101),
+    sf::Color(27, 111, 21),
+    sf::Color(110, 111, 21),
+    sf::Color(111, 27, 21),
+    
+    sf::Color(130, 130, 130),
+    sf::Color(159, 9, 157),
+    sf::Color(94, 9, 159),
+    sf::Color(9, 82, 159),
+    sf::Color(9, 159, 142),
+    sf::Color(19, 159, 9),
+    sf::Color(169, 172, 17),
+    sf::Color(153, 24, 15),
+
+    
+    sf::Color(196, 196, 196),
+    sf::Color(194, 91, 193),
+    sf::Color(150, 91, 194),
+    sf::Color(91, 141, 194),
+    sf::Color(91, 194, 182),
+    sf::Color(98, 194, 91),
+    sf::Color(193, 194, 91),
+    sf::Color(194, 98, 91)
+};
+
+sf::Color hairPalette[1] = {
+    sf::Color(255, 255, 255)
+};
+
+sf::Color skinPalette[2] = {
+    sf::Color(255,255,0),
+    sf::Color(0, 255, 255)
+};
+
+struct spritePalette {
+    sf::Color *clothes;
+    sf::Color *hair;
+    sf::Color *skin;
+};  
+
+spritePalette mainPalette = {
+    clothesPalette,
+    hairPalette,
+    skinPalette
+};
+
+
+// charlook(int hatID, int hairID, int faceID, sfcolor topColor, sfcolor pantsColor, sfcolor shoeColor, sfcolor hairColor)
+struct charLook {
+    int hatID;
+    int hairID;
+    int faceID;
+    sf::Color topColor;
+    sf::Color pantsColor;
+    sf::Color shoeColor;
+    sf::Color hairColor;
+};
+
 static void updateViewViewport(const sf::RenderWindow& window, sf::View& view) {
     float winW = static_cast<float>(window.getSize().x);
     float winH = static_cast<float>(window.getSize().y);
@@ -20,16 +87,6 @@ static void updateViewViewport(const sf::RenderWindow& window, sf::View& view) {
 
     view.setViewport(sf::FloatRect(sf::Vector2(viewportLeft, viewportTop), sf::Vector2(viewportW, viewportH)));
 }
-
-struct charLook {
-    int hatID;
-    int hairID;
-    int faceID;
-    sf::Color topColor;
-    sf::Color pantsColor;
-    sf::Color shoeColor;
-    sf::Color hairColor;
-};
 
 class canSprite {
 public:
@@ -63,6 +120,8 @@ public:
         window.draw(can);
         window.draw(canBG);
     }
+
+
 private:
     sf::RectangleShape can;
     sf::RectangleShape canBG;
@@ -94,16 +153,22 @@ public:
         initPart(hat.part, hat.tex);
 
         if (look.hairID > 0) {
-            hasHair = loadAndSetup(hair, std::format("assets/img/sprites/hair/hair{}.png", look.hairID));
+            std::stringstream ss;
+            ss << "assets/img/sprites/hair/hair" <<  look.hairID << ".png";
+            hasHair = loadAndSetup(hair, ss.str());
             if (hasHair) hair.part.setFillColor(look.hairColor);
         }
 
         if (look.faceID > 0) {
-            hasFace = loadAndSetup(face, std::format("assets/img/sprites/face/face{}.png", look.faceID));
+            std::stringstream ss;
+            ss << "assets/img/sprites/face/face" <<  look.faceID << ".png";
+            hasFace = loadAndSetup(face, ss.str());
         }
 
         if (look.hatID > 0) {
-            hasHat = loadAndSetup(hat, std::format("assets/img/sprites/hat/hat{}.png", look.hatID));
+            std::stringstream ss;
+            ss << "assets/img/sprites/hat/hat" << look.hatID << ".png";
+            hasHat = loadAndSetup(hat, ss.str());
         }
 
         loadAndSetup(shoes, "assets/img/sprites/shoes.png");
@@ -170,6 +235,53 @@ public:
         hat.part.setScale(direction);
     }
 
+    void changeLook(charLook newLook){
+        if (newLook.hairID > 0) {
+            std::stringstream ss;
+            ss << "assets/img/sprites/hair/hair" << newLook.hairID << ".png";
+            hasHair = loadAndSetup(hair, ss.str());
+            if (hasHair) hair.part.setFillColor(newLook.hairColor);
+            else std::cout << "ERROR WHILE LOADING HAIR";
+        }
+        else {
+            hasHair = false;
+        }
+
+        if (newLook.faceID > 0) {
+            std::stringstream ss;
+            ss << "assets/img/sprites/face/face" << newLook.faceID << ".png";
+            hasFace = loadAndSetup(face, ss.str());
+            if (!hasFace) std::cout << "ERROR WHILE LOADING FACE";
+        }
+        else {
+            hasFace = false;
+        }
+
+        if (newLook.hatID > 0) {
+            std::stringstream ss;
+            ss << "assets/img/sprites/hat/hat" << newLook.hatID << ".png";
+            hasHat = loadAndSetup(hat, ss.str());
+            if (!hasHat) std::cout << "ERROR WHILE LOADING HAT";
+        }
+        else {
+            hasHat = false;
+        }
+
+        loadAndSetup(shoes, "assets/img/sprites/shoes.png");
+        shoes.part.setFillColor(newLook.shoeColor);
+
+        loadAndSetup(pants, "assets/img/sprites/pants.png");
+        pants.part.setFillColor(newLook.pantsColor);
+
+        loadAndSetup(shirt, "assets/img/sprites/shirt.png");
+        shirt.part.setFillColor(newLook.topColor);
+
+        loadAndSetup(fingers, "assets/img/sprites/fingers.png");
+        loadAndSetup(handBG, "assets/img/sprites/handbg.png");
+        loadAndSetup(handFG, "assets/img/sprites/handfg.png");
+        loadAndSetup(head, "assets/img/sprites/head.png");
+    }
+
 private:
     struct Part {
         sf::RectangleShape part{ PartSize };
@@ -198,8 +310,10 @@ private:
     bool loadAndSetup(Part& p, const std::string& path) {
         if (p.tex.loadFromFile(path)) {
             p.part.setTexture(&p.tex);
+            std::cout << path << std::endl;
             return true;
         }
+
         return false;
     }
 };
@@ -306,3 +420,47 @@ public:
         //}
     }
 };
+
+
+charLook randomChar() {
+    int clothesLen = sizeof(mainPalette.clothes) / sizeof(mainPalette.clothes[0]);
+    int hairLen = sizeof(mainPalette.hair) / sizeof(mainPalette.hair[0]);
+    int skinLen = sizeof(mainPalette.skin) / sizeof(mainPalette.skin[0]);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis4(0, 3);
+    std::uniform_int_distribution<> dis5(0, 10);
+    std::uniform_int_distribution<> dis6(0, 4);
+    std::uniform_int_distribution<> dis7(0, 255);
+    std::uniform_int_distribution<> skinInt(0, skinLen-1);
+    std::uniform_int_distribution<> hairInt(0, hairLen-1);
+    std::uniform_int_distribution<> clothesInt(0, clothesLen-1);
+    int hat = dis4(gen);
+    int hair = dis5(gen);
+    int face = dis6(gen);
+    sf::Color shirtColor = mainPalette.clothes[clothesInt(gen)];
+    sf::Color pantsColor = mainPalette.clothes[clothesInt(gen)];
+    sf::Color shoesColor = mainPalette.clothes[clothesInt(gen)];
+
+    int hairColorInt = clothesInt(gen);
+    std::cout << "randHairColor: " << hairColorInt << std::endl;
+    // tutaj jezeli wylosowalo clothesColor wiekszy niz 15. to daje go, ale jezeli kolor jest za ciemny czy za jasny (posegrowane w arrayu) to daje normalny ludzki kolor. wylosowanie jakiegokolwiek dziwnego koloru ma szanse 1/3, jakikolwiek normalny - 2/3 (w teorii.........)
+    sf::Color hairColor = hairColorInt >= 15 ? mainPalette.clothes[hairColorInt] : mainPalette.hair[hairInt(gen)];
+
+    sf::Color skinColor = mainPalette.skin[skinInt(gen)];
+
+    charLook charCharacter = { hat, hair, face, shirtColor, pantsColor, shoesColor, hairColor};
+
+    std::cout << "hatID: " << hat << std::endl << 
+        " hairID: " << hair << std::endl << 
+        " faceID: " << face << std::endl << 
+        " shirtColor: " << (int)shirtColor.r << " " << (int)shirtColor.g << " " << (int)shirtColor.b << std::endl <<
+        " pantsColor: " << (int)pantsColor.r << " " << (int)pantsColor.g << " " << (int)pantsColor.b << std::endl <<
+        " shoesColor " << (int)shoesColor.r << " " << (int)shoesColor.g << " " << (int)shoesColor.b << std::endl <<
+        " hairColor: " << (int)hairColor.r << " " << (int)hairColor.g << " " << (int)hairColor.b << std::endl <<
+        " skinColor: " << (int)skinColor.r << " " << (int)skinColor.g << " " << (int)skinColor.b << std::endl; 
+    return charCharacter;
+}
+
+
+// hair color to kolor normalny, a clothes popierdolony, 

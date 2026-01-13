@@ -136,6 +136,73 @@ private:
     sf::Texture canBGTxt;
 };
 
+
+
+class middleCanSprite{
+public:
+    middleCanSprite(const sf::Vector2f& position)
+        : can({ 44.f, 74.f }),
+        canBG({ 44.f, 74.f }), 
+        canNoise({ 44.f, 74.f }) {
+        canTxt.loadFromFile("assets/img/cans/canbase.png");
+        can.setTexture(&canTxt);
+        canBGTxt.loadFromFile("assets/img/cans/can1.png");
+        canBG.setTexture(&canBGTxt);
+        canNoiseTxt.loadFromFile("assets/img/cans/cannoise.png");
+        canNoise.setTexture(&canNoiseTxt);
+
+        can.setOrigin({ 22.f, 74.f});
+        canBG.setOrigin({ 22.f, 74.f });
+        canNoise.setOrigin({ 22.f, 74.f });
+    }
+    sf::Vector2f getPosition() {
+        return can.getPosition();
+    }
+
+    sf::FloatRect getGlobalBounds() {
+        return can.getGlobalBounds();
+    }
+
+    void setPosition(sf::Vector2f pos) {
+        can.setPosition(pos);
+        canBG.setPosition(pos);
+        canNoise.setPosition(pos);
+    }
+
+    void draw(sf::RenderWindow& window) {
+        window.draw(can);
+        window.draw(canBG);
+    }
+    
+    void rotateRight() {
+            can.rotate(sf::degrees(90));
+            canBG.rotate(sf::degrees(90));
+            canNoise.rotate(sf::degrees(90));  
+    }
+
+    void rotateLeft() {
+            can.rotate(sf::degrees(-90));
+            canBG.rotate(sf::degrees(-90));
+            canNoise.rotate(sf::degrees(-90));
+    }
+
+    void standUp() {
+        can.setRotation(sf::degrees(0));
+        canBG.setRotation(sf::degrees(0));
+        canNoise.setRotation(sf::degrees(0));
+    }
+
+
+private:
+    sf::RectangleShape can;
+    sf::RectangleShape canBG;
+    sf::RectangleShape canNoise;
+
+    sf::Texture canTxt;
+    sf::Texture canBGTxt;
+    sf::Texture canNoiseTxt;
+};
+
 class charSprite {
 public:
     static constexpr sf::Vector2f PartSize{ 157.f, 354.f };

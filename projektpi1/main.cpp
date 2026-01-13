@@ -11,11 +11,14 @@
 #include <cmath> 
 
 
+
 sf::Vector2f mainWin = { 800.0f, 600.0f };
 void updateViewViewport(const sf::RenderWindow&, sf::View&);
 enum class GameState { Menu, Game, GameMenu };
 std::string buttText = "assets/img/button.png";
-
+sf::Texture mainMenuBG;
+sf::Texture gameBG;
+sf::RectangleShape logicalBackground(mainWin);
 
 sf::Vector2f enemyBasePos = sf::Vector2f({ 50.0, 215.0 });
 sf::Vector2f playerBasePos = sf::Vector2f({ 750.0, 215.0 });
@@ -52,7 +55,7 @@ struct GameStart {
 
     sf::Vector2f initialVelocity;
 
-    int myDrink = 74;
+    int myDrink = 0;
     int enemyDrink = 0;
     bool isSpaceActive = false;
 
@@ -144,12 +147,9 @@ int main()
     Button exitButton({ 254.f, 104.f }, { 273.f, 400.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), "WYJSCIE", font, 30, buttText);
 
     // Tło
-    sf::Texture mainMenuBG;
     if (!mainMenuBG.loadFromFile("assets/img/mainmenu.png")) return -1;
-    sf::Texture gameBG;
     if (!gameBG.loadFromFile("assets/img/gamebg.png")) return -1;
 
-    sf::RectangleShape logicalBackground(mainWin);
     logicalBackground.setPosition({ 0.f, 0.f });
     logicalBackground.setTexture(&mainMenuBG);
 
@@ -323,10 +323,9 @@ void logic(GameState &currentState, GameStart &game,
            float ramp_up, canSprite &ball2,
            float gravity, float dt, sf::Sound &sound,
            greyBar &visBar, int &level, sf::Text &levelDisplay,
-           greyBar &visEnemyBar)
+           greyBar &visEnemyBar) 
 {
     if (currentState != GameState::Game) return;
-
     const int   DRINK_MAX         = 30;
     const float MID_OFFSET        = 60.f;   // żeby nie wchodzili w puszkę
     const float PLAYER_RUN_STEP   = 10.f;   // px na jedno kliknięcie spacji
@@ -351,7 +350,7 @@ void logic(GameState &currentState, GameStart &game,
         game.scorePlayer = keepP;
         game.scoreBot    = keepB;
         game.round       = keepR;
-
+        enemySP.changeLook(randomChar());
         visBar.setPosition({645 + 100, 540});
         visEnemyBar.setPosition({145 - 100, 540});
         can.setFillColor(sf::Color::Yellow);
@@ -367,6 +366,7 @@ void logic(GameState &currentState, GameStart &game,
 
     // ESC: reset do menu
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Escape)) {
+        logicalBackground.setTexture(&mainMenuBG);
         currentState = GameState::Menu;
         resetRound();
         return;

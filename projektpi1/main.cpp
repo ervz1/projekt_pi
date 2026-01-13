@@ -519,11 +519,11 @@ void odbicie(canSprite &ball, float pozycja_x, GameStart &game, float dt, sf::Ci
 
 
 
-std::clock_t start_bot_delay = std::clock();
+std::clock_t start_bot_delay = 0;
 
 void rzutBot(sf::CircleShape &can, canSprite &ball2, float gravity, GameStart &game, int &level)
 {
-
+    if (!start_bot_delay) start_bot_delay = std::clock();
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(185.0f, 800.0f);
@@ -560,21 +560,19 @@ void rzutBot(sf::CircleShape &can, canSprite &ball2, float gravity, GameStart &g
     // Veloicty = gravity * distance /2 / velocityx - ((height * random_x)/ distance) (- because y axis in sfml upside down)
     float random_y = (physicsConstant / random_x) - ((height * random_x) / distance);
 
-    std::cout << random_x << ' ' << random_y << std::endl;
+    std::clock_t delay = std::clock() - start_bot_delay;
+    if (delay > 1000 - std::max(game.round*50, 600)) {
+        std::cout << random_x << ' ' << random_y << std::endl;
 
-    // error (0 = enemy always hits)
-    //int error = 200;
-    //srand(time(NULL));
-    //float margin = rand() % (2*error) - error;
-     
-    game.velocity = sf::Vector2f(random_x, -(margin + random_y));
-    std::cout  << "margin" << margin<< std::endl;
-    
-    // game.velocity = sf::Vector2f(687.352, -175.465);
-    game.initialVelocity = game.velocity;
-    game.hasHit = false;
+        game.velocity = sf::Vector2f(random_x, -(margin + random_y));
+        std::cout << "margin" << margin << std::endl;
+        game.initialVelocity = game.velocity;
+        game.hasHit = false;
 
-    game.isFlying = true;
+        game.isFlying = true;
+        start_bot_delay = 0;
+    }
+ 
 }
 
 void rzutGracz(GameStart &game, float ramp_up)

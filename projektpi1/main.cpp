@@ -11,7 +11,6 @@
 #include <cmath> 
 
 
-
 sf::Vector2f mainWin = { 800.0f, 600.0f };
 void updateViewViewport(const sf::RenderWindow&, sf::View&);
 enum class GameState { Menu, Game, GameMenu };
@@ -88,7 +87,7 @@ struct GameStart {
 };
 
 void logic(GameState &currentState, GameStart &game, canSprite &ball, middleCanSprite &can, float ramp_up, canSprite &ball2, float gravity,
-    float dt, sf::Sound &sound, greyBar &visBar, int &level, sf::Text &levelDisplay, greyBar& visEnemyBar);
+    float dt, sf::Sound &sound, fillPiwa &visBar, int &level, sf::Text &levelDisplay, fillPiwa& visEnemyBar);
 
 void odbicie(canSprite &ball, float pozycja_x, GameStart &game, float dt, middleCanSprite&can, sf::Sound &sound);
 
@@ -100,7 +99,7 @@ void bounce(canSprite &ball, middleCanSprite&can, GameStart &game, sf::Sound &so
 
 void groundReset(canSprite &ball, GameStart &game, float ball_x);
 
-void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, canSprite &ball, middleCanSprite &can, canSprite &ball2, GameStart &game, sf::Text &aim, sf::Text &move, sf::Text &drink, QTEbar &drinkBar, greyBar &visBar, sf::Text &levelDisplay, QTEbar& enemyBar, greyBar& visEnemyBar, sf::Text scoreText, sf::Text roundText);
+void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, canSprite &ball, middleCanSprite &can, canSprite &ball2, GameStart &game, sf::Text &aim, sf::Text &move, sf::Text &drink, ramkaPiwa &drinkBar, fillPiwa &visBar, sf::Text &levelDisplay, ramkaPiwa& enemyBar, fillPiwa& visEnemyBar, sf::Text scoreText, sf::Text roundText);
 
 void drawBars(GameStart &game, canSprite &ball, sf::RenderWindow &window);
 
@@ -110,17 +109,15 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
 
 void eventLoop(const std::optional<sf::Event> &event, sf::RenderWindow &window, sf::View &view, GameState &currentState, Button &playButton, sf::Vector2f &mousePos, Button &exitButton);
 
-void drinkCounter(GameStart& game, greyBar &visBar);
+void drinkCounter(GameStart& game, fillPiwa &visBar);
 
-void drinkCounterEnemy(GameStart& game, greyBar &visEnemyBar);
+void drinkCounterEnemy(GameStart& game, fillPiwa &visEnemyBar);
 
 int main()
 {   
-
     // SETUP
     GameStart game;
     playerSP.flip(-1), game.graczFacingRight = false;
-
 
     //  Rozmiar okna, resize
     sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "Flanki");
@@ -135,9 +132,19 @@ int main()
     GameState currentState = GameState::Menu;
 
     // Assety
+
+    // puszka piwa i jej wypełnienie:
+    sf::Texture barFillTex;
+    sf::Texture barOutlineTex;
+
+    if (!barFillTex.loadFromFile("assets/img/bar/barfill.png")) return -1;
+    if (!barOutlineTex.loadFromFile("assets/img/bar/baroutline.png")) return -1;
+    
+    // fonty
     sf::Font font;
     if (!font.openFromFile("assets/fonts/DejaVuSans.ttf")) return -1;
-
+    
+    // dzwiek
     sf::SoundBuffer buffer;
     if (!buffer.loadFromFile("assets/music/clank.mp3")) return -1;
     
@@ -161,17 +168,14 @@ int main()
     middleCanSprite can({ 400.f, 500.f + 74.f });
     can.setPosition({ 400.f, 500.f + 74.f });
 
-
     canSprite ball({game.ball_x, game.ball_y}, sf::Color::Blue);
     ball.setPosition({ game.ball_x, game.ball_y });
     canSprite ball2({ game.bot_ball_x, game.ball_y}, sf::Color::Red);
     ball2.setPosition({ game.bot_ball_x, game.ball_y });
 
-
     sf::Sound sound(buffer);
 
-    // Punktyq
-
+    // Punkty
     sf::Text scoreText(font, "", 18);
     scoreText.setFillColor(sf::Color::White);
     scoreText.setPosition({20.f, 20.f});
@@ -199,20 +203,19 @@ int main()
     move.setFillColor(sf::Color::Red);
     move.setPosition({ 400, 110 });
 
-    QTEbar drinkBar(20.f, 50.f, 0.f);
-    drinkBar.setPosition({ 650 + 100, 400 });
+    // piwo gracza
+    ramkaPiwa drinkBar(barOutlineTex);
+    drinkBar.setPosition({690, 220});
     
-    greyBar visBar(30.f, 10.f, 0.f);
-    visBar.setPosition({ 645 + 100, 540 });
+    fillPiwa visBar(barFillTex, 75);
+    visBar.setPosition({690, 220});
 
-    // enemy bar 
-    QTEbar enemyBar(20.f, 50.f, 0.f);
-    enemyBar.setPosition({ 150 - 100, 400 });
+    // piwo enemy
+    ramkaPiwa enemyBar(barOutlineTex);
+    enemyBar.setPosition({10, 220});
 
-    greyBar visEnemyBar(30.f, 10.f, 0.f);
-    visEnemyBar.setPosition({ 145 - 100, 540 });
-
-    
+    fillPiwa visEnemyBar(barFillTex, 30);
+    visEnemyBar.setPosition({10, 220});
 
     int level = 1;
     //char levelChar = '1';
@@ -221,9 +224,6 @@ int main()
     levelDisplay.setStyle(sf::Text::Bold);
     levelDisplay.setFillColor(sf::Color::Red);
     levelDisplay.setPosition({ 300, 110 });
-
-
-
 
     // fizyka i czas
     float gravity = 980.f;
@@ -258,16 +258,6 @@ int main()
         drawGame(currentState, playButton, window, exitButton, ball, can, ball2, game, aim, move, drink, drinkBar, visBar, levelDisplay, enemyBar, visEnemyBar, scoreText, roundText);
 
         window.display();
-
-        /*std::cout
-        << "\033[2J\033[H"
-        << "turn=" << game.turn
-        << " flying=" << game.isFlying
-        << " graczBiegnie=" << game.graczBiegnie
-        << " botBiegnie=" << game.botBiegnie
-        << " charging=" << game.isCharging
-        << " up=" << game.up << " left=" << game.left
-        << "\n";*/
     }
 }
 
@@ -320,13 +310,12 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
     }
 }
 
-
 void logic(GameState &currentState, GameStart &game,
            canSprite &ball, middleCanSprite &can,
            float ramp_up, canSprite &ball2,
            float gravity, float dt, sf::Sound &sound,
-           greyBar &visBar, int &level, sf::Text &levelDisplay,
-           greyBar &visEnemyBar) 
+           fillPiwa &visBar, int &level, sf::Text &levelDisplay,
+           fillPiwa &visEnemyBar) 
 {
     if (currentState != GameState::Game) return;
     const int   DRINK_MAX         = 30;
@@ -343,7 +332,8 @@ void logic(GameState &currentState, GameStart &game,
     const bool spaceDown    = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Space);
     const bool spacePressed = spaceDown && !game.spaceHeld;
     game.spaceHeld = spaceDown;
-
+    visBar.removeOffset(); // naprawia bug związany z wychodzeniem piwa 
+    visEnemyBar.removeOffset(); // z ramki przy restarcie
     auto resetRound = [&]() {
         const int keepP = game.scorePlayer;
         const int keepB = game.scoreBot;
@@ -353,20 +343,23 @@ void logic(GameState &currentState, GameStart &game,
         game.scorePlayer = keepP;
         game.scoreBot    = keepB;
         game.round       = keepR;
+        
         enemySP.changeLook(randomChar());
-        visBar.setPosition({645 + 100, 540});
-        visEnemyBar.setPosition({145 - 100, 540});
-        //can.setFillColor(sf::Color::Yellow);
-
+        float BOTTOM_OFFSET = 8.f;
+        visBar.addOffset(); // naprawia bug związany z polozeniem fillu przy restarcie
+        visEnemyBar.addOffset();
+        visBar.setPosition({690, 220}); // restart poziomu piwa
+        visEnemyBar.setPosition({10, 220}); // przy escape
+        visBar.setValue(0);
+        visEnemyBar.setValue(0);
         ball.setPosition({game.ball_x, game.ball_y});
         ball2.setPosition({game.bot_ball_x, game.ball_y});
-
+        
         playerSP.setPos(game.graczX, game.graczY);
         playerSP.flip(-1);
         enemySP.setPos(game.botX, game.botY);
         enemySP.flip(1);
         can.standUp();
-        
     };
 
     // ESC: reset do menu
@@ -429,15 +422,12 @@ void logic(GameState &currentState, GameStart &game,
     }
 
     // ===== 3 RUCH PO TRAFIENIU =====
-
     // gracz bieg
     if (game.graczBiegnie && spacePressed)
     {
         const float targetX = game.graczWraca ? game.graczHomeX : midPlayerX;
         const float dir     = (targetX > game.graczX) ? 1.f : -1.f;
-
         game.graczX += dir * PLAYER_RUN_STEP * 2;
-        
 
         const bool reached =
             (dir > 0.f && game.graczX >= targetX) ||
@@ -459,7 +449,6 @@ void logic(GameState &currentState, GameStart &game,
             }
         }
     }
-
 
     // bot bieg
     if (game.botBiegnie)
@@ -512,11 +501,10 @@ void logic(GameState &currentState, GameStart &game,
 
     // ===== 5 PUNKTY =====
     if (game.enemyDrink >= 30) {
-        /*game.scoreBot++;
-        game.round++;*/
+        game.scoreBot++;
+        // game.round++;
         
         //Jak bot wygra powinien byc koniec gry
-
         resetRound();
     }
     else if (game.myDrink >= 75) {
@@ -534,12 +522,7 @@ void odbicie(canSprite &ball, float pozycja_x, GameStart &game, float dt, middle
     groundReset(ball, game, pozycja_x); // reset po odbiciu
 
 }
-
-
-
 std::clock_t start_bot_delay = 0;
-
-
 
 void rzutBot(middleCanSprite&can, canSprite &ball2, float gravity, GameStart &game, int &level)
 {
@@ -655,22 +638,21 @@ void bounce(canSprite &ball, middleCanSprite&can, GameStart &game, sf::Sound &so
     }
 }
 
-void drinkCounter(GameStart& game, greyBar &visBar)
+void drinkCounter(GameStart& game, fillPiwa& visBar)
 {
     constexpr int DRINK_MAX = 75;
     if (game.myDrink >= DRINK_MAX) return;
 
     game.myDrink++;
-    visBar.move({0.f, -2.f});
+    visBar.setValue(game.myDrink);
 }
-
-void drinkCounterEnemy(GameStart& game, greyBar& visEnemyBar)
+void drinkCounterEnemy(GameStart& game, fillPiwa& visEnemyBar)
 {
     constexpr int DRINK_MAX = 30;
     if (game.enemyDrink >= DRINK_MAX) return;
 
     game.enemyDrink++;
-    visEnemyBar.move({0.f, -5.f});
+    visEnemyBar.setValue(game.enemyDrink);
 }
 
 void groundReset(canSprite &ball, GameStart &game, float ball_x)
@@ -691,7 +673,7 @@ void groundReset(canSprite &ball, GameStart &game, float ball_x)
 void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& window,
     Button& exitButton, canSprite& ball, middleCanSprite& can,
     canSprite& ball2, GameStart& game,
-    sf::Text& aim, sf::Text& move, sf::Text& drink, QTEbar &drinkBar, greyBar &visBar, sf::Text &levelDisplay, QTEbar& enemyBar, greyBar& visEnemyBar, sf::Text scoreText, sf::Text roundText)
+    sf::Text& aim, sf::Text& move, sf::Text& drink, ramkaPiwa &drinkBar, fillPiwa &visBar, sf::Text &levelDisplay, ramkaPiwa& enemyBar, fillPiwa& visEnemyBar, sf::Text scoreText, sf::Text roundText)
 {
     if (currentState == GameState::Menu)
     {
@@ -714,11 +696,12 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
         window.draw(move);
         window.draw(drink);
 
-        window.draw(drinkBar);
-        window.draw(enemyBar);
 
         window.draw(visBar);
         window.draw(visEnemyBar);
+
+        window.draw(drinkBar);
+        window.draw(enemyBar);
 
         window.draw(levelDisplay);
 

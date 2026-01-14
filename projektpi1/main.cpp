@@ -644,7 +644,7 @@ void drinkCounter(GameStart& game, fillPiwa& visBar)
     if (game.myDrink >= DRINK_MAX) return;
 
     game.myDrink++;
-    visBar.setValue(game.myDrink);
+    visBar.setValue(game.myDrink - 5);
 }
 void drinkCounterEnemy(GameStart& game, fillPiwa& visEnemyBar)
 {
@@ -652,7 +652,7 @@ void drinkCounterEnemy(GameStart& game, fillPiwa& visEnemyBar)
     if (game.enemyDrink >= DRINK_MAX) return;
 
     game.enemyDrink++;
-    visEnemyBar.setValue(game.enemyDrink);
+    visEnemyBar.setValue(game.enemyDrink -5);
 }
 
 void groundReset(canSprite &ball, GameStart &game, float ball_x)

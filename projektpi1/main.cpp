@@ -17,20 +17,45 @@ enum class GameState { Menu, Game, GameMenu, CustomizeMenu };
 std::string buttText = "assets/img/button.png";
 sf::Texture mainMenuBG;
 sf::Texture gameBG;
+sf::Texture menuBG;
+sf::Texture mirrorText;
+sf::Texture chooseBGSText;
 sf::RectangleShape logicalBackground(mainWin);
 sf::Font font;
+sf::RectangleShape mirror;
+sf::RectangleShape chooseBGS;
 std::string fontS = "assets/fonts/DejaVuSans.ttf";
-Button playButton({ 254.f, 104.f }, { 273.f, 260.f }, sf::Color(96, 178, 37), sf::Color(109, 204, 42), "START", fontS, 30, buttText);
-Button customButton({254.f, 104.f}, { 273.f, 400.f }, sf::Color(100, 100, 100), sf::Color(150, 150, 150), "CUSTOM", fontS, 30, buttText);
-Button exitButton({ 254.f, 104.f }, { 273.f, 540.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), "WYJSCIE", fontS, 30, buttText);
+
+Button playButton({ 228.f, 95.f }, { 273.f, 250.f }, sf::Color(96, 178, 37), sf::Color(109, 204, 42), "START", fontS, 26, buttText);
+Button customButton({ 228.f, 95.f }, { 273.f, 360.f }, sf::Color(100, 100, 100), sf::Color(150, 150, 150), "CUSTOM", fontS, 26, buttText);
+Button exitButton({ 228.f, 95.f }, { 273.f, 470.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), "WYJSCIE", fontS, 26, buttText);
+
+
 
 
 sf::Vector2f enemyBasePos = sf::Vector2f({ 50.0, 215.0 });
 sf::Vector2f playerBasePos = sf::Vector2f({ 750.0, 215.0 });
 
 charLook playerChar = { 1, 2, 4, sf::Color(255, 0, 0), sf::Color(0, 255, 0), sf::Color(0, 0, 255), sf::Color(255, 255, 0), sf::Color::White };
+
 charSprite playerSP(playerBasePos, playerChar);
-chooseDisp test({255.f, 255.f}, sf::Color::White, 0);
+
+chooseDisp customHairDisp({490.f, 90.f}, 0, 2);
+chooseDisp customHatDisp({ 308.f, 6.f }, 1, 1);
+chooseDisp customFaceDisp({ 300.f, 162.f }, 2, 2);
+
+std::string arrR = "assets/img/arrRight.png";
+std::string arrL = "assets/img/arrLeft.png";
+
+
+Button customHairRight({ 45.f, 39.f }, {722.f, 154.f}, sf::Color::White, sf::Color::Green, "", fontS, 0, arrR);
+Button customHairLeft({ 46.f, 40.f }, {480.f, 151.f}, sf::Color::White, sf::Color::Green, "", fontS, 0, arrL);
+
+Button customHatRight({ 45.f, 39.f }, {540.f, 60.f}, sf::Color::White, sf::Color::Green, "", fontS, 0, arrR);
+Button customHatLeft({ 46.f, 40.f }, {298.f, 57.f}, sf::Color::White, sf::Color::Green, "", fontS, 0, arrL);
+
+Button customFaceRight({ 45.f, 39.f }, {544.f, 277.f}, sf::Color::White, sf::Color::Green, "", fontS, 0, arrR);
+Button customFaceLeft({ 46.f, 40.f }, {302.f, 274.f}, sf::Color::White, sf::Color::Green, "", fontS, 0, arrL);
 
 std::random_device rd;
 std::mt19937 gen(rd());
@@ -165,10 +190,19 @@ int main()
     // Tło
     if (!mainMenuBG.loadFromFile("assets/img/mainmenu.png")) return -1;
     if (!gameBG.loadFromFile("assets/img/gamebg.png")) return -1;
+    if (!menuBG.loadFromFile("assets/img/brickbg.png")) return -1;
+    if (!mirrorText.loadFromFile("assets/img/mirror.png")) return -1;
+    if (!chooseBGSText.loadFromFile("assets/img/chooseBGS.png")) return -1;
 
     logicalBackground.setPosition({ 0.f, 0.f });
     logicalBackground.setTexture(&mainMenuBG);
 
+    mirror.setTexture(&mirrorText);
+    mirror.setSize({275.f, 421.f});
+    mirror.setPosition({39.f, 95.f});
+    chooseBGS.setTexture(&chooseBGSText);
+    chooseBGS.setSize({408.f, 360.f});
+    chooseBGS.setPosition({ 328.f, 6.f });
     // Obiekty - puszki
     /*sf::CircleShape can(15.f);
     can.setFillColor(sf::Color::Yellow);
@@ -296,8 +330,12 @@ void eventLoop(const std::optional<sf::Event> &event, sf::RenderWindow &window, 
 void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::Vector2f &mousePos, GameState &currentState, Button &exitButton, sf::RenderWindow &window)
 {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Escape) && currentState == GameState::CustomizeMenu) {
-        currentState = GameState::Menu;        test.setPartID(2);
+        currentState = GameState::Menu;        
     }
+    //if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Right) && currentState == GameState::CustomizeMenu) {
+    //    customHairDisp.pIDstep(1);
+    //    customFaceDisp.setColor(hairPalette[2]);
+    //}
     if (playButton.isMouseOver(mousePos)) {
         playButton.hover();
     }
@@ -310,18 +348,65 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
     else {
         exitButton.unhover();
     }
+
+    customHairRight.isMouseOver(mousePos) ? customHairRight.hover() : customHairRight.unhover();
+    customHairLeft.isMouseOver(mousePos) ? customHairLeft.hover() : customHairLeft.unhover();
+
+    customHatRight.isMouseOver(mousePos) ? customHatRight.hover() : customHatRight.unhover();
+    customHatLeft.isMouseOver(mousePos) ? customHatLeft.hover() : customHatLeft.unhover();
+
+    customFaceRight.isMouseOver(mousePos) ? customFaceRight.hover() : customFaceRight.unhover();
+    customFaceLeft.isMouseOver(mousePos) ? customFaceLeft.hover() : customFaceLeft.unhover();
+
     if (customButton.isMouseOver(mousePos)) customButton.hover();
     else customButton.unhover();
     if (const auto *mouseEvent = event->getIf<sf::Event::MouseButtonPressed>())
     {
         if (mouseEvent->button == sf::Mouse::Button::Left)
         {
-            if (playButton.isMouseOver(mousePos))
-                currentState = GameState::Game;
-            if (customButton.isMouseOver(mousePos))
-                currentState = GameState::CustomizeMenu;
-            if (exitButton.isMouseOver(mousePos))
-                window.close();
+            if (currentState == GameState::Menu) {
+                if (playButton.isMouseOver(mousePos))
+                    currentState = GameState::Game;
+                if (customButton.isMouseOver(mousePos))
+                    currentState = GameState::CustomizeMenu;
+                logicalBackground.setTexture(&menuBG);
+                if (exitButton.isMouseOver(mousePos))
+                    window.close();
+            }
+            if (currentState == GameState::CustomizeMenu) {
+                if (customHairRight.isMouseOver(mousePos)) { 
+                    customHairDisp.pIDstep(1);
+                    playerChar.hairID = customHairDisp.partID;
+                    playerSP.changeLook(playerChar);
+                };
+                if (customHairLeft.isMouseOver(mousePos)) {
+                    customHairDisp.pIDstep(-1);
+                    playerChar.hairID = customHairDisp.partID;
+                    playerSP.changeLook(playerChar);
+                }
+
+                if (customHatRight.isMouseOver(mousePos)) {
+                    customHatDisp.pIDstep(1);
+                    playerChar.hatID = customHatDisp.partID;
+                    playerSP.changeLook(playerChar);
+                }
+                if (customHatLeft.isMouseOver(mousePos)) {
+                    customHatDisp.pIDstep(-1);
+                    playerChar.hatID = customHatDisp.partID;
+                    playerSP.changeLook(playerChar);
+                }
+
+                if (customFaceRight.isMouseOver(mousePos)) {
+                    customFaceDisp.pIDstep(1);
+                    playerChar.faceID = customFaceDisp.partID;
+                    playerSP.changeLook(playerChar);
+                }
+                if (customFaceLeft.isMouseOver(mousePos)) {
+                    customFaceDisp.pIDstep(-1);
+                    playerChar.faceID = customFaceDisp.partID;
+                    playerSP.changeLook(playerChar);
+                }
+            }
         }
     }
 }
@@ -703,8 +788,18 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
         if(playerSP.facing == -1) {
             playerSP.flip();
         }
-        test.draw(window);
+        window.draw(mirror);
+        window.draw(chooseBGS);
+        customHatDisp.draw(window);
+        customHairDisp.draw(window);
         playerSP.draw(window);
+        customFaceDisp.draw(window);
+        customHairRight.draw(window);
+        customHairLeft.draw(window);
+        customHatRight.draw(window);
+        customHatLeft.draw(window);
+        customFaceRight.draw(window);
+        customFaceLeft.draw(window);
     }
     else if (currentState == GameState::Game)
     {

@@ -146,8 +146,6 @@ private:
     sf::Texture canBGTxt;
 };
 
-
-
 class middleCanSprite{
 public:
     middleCanSprite(const sf::Vector2f& position)
@@ -492,66 +490,6 @@ private:
     sf::Color hoverColor;
 };
 
-
-
-
-class QTEbar : public sf::Drawable, public sf::Transformable{
-
-private:
-    std::vector<sf::RectangleShape> m_rects;
-
-    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override {
-        states.transform *= getTransform();
-        for (const auto& rect : m_rects) {
-            target.draw(rect, states);
-        }
-    }
-public:
-    QTEbar(float width, float height, float spacing) {
-        const sf::Color colors[] = {
-            sf::Color(0,150,0),
-            sf::Color(237, 214, 34),
-            sf::Color(255,0,0)
-        };
-
-        for (int i = 0; i < 3; i++) {
-            sf::RectangleShape rect(sf::Vector2f(width, height));
-            rect.setFillColor(colors[i]);
-            float yPos = (height + spacing) * static_cast<float>(i);
-            rect.setPosition(sf::Vector2f(0.f, yPos));
-            m_rects.push_back(rect);
-        }
-    }
-};
-
-
-class greyBar : public sf::Drawable, public sf::Transformable {
-
-private:
-    std::vector<sf::RectangleShape> m_rects;
-
-    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override {
-        states.transform *= getTransform();
-        for (const auto& rect : m_rects) {
-            target.draw(rect, states);
-        }
-    }
-public:
-    greyBar(float width, float height, float spacing) {
-        
-        
-
-        //for (int i = 0; i < 3; i++) {
-            sf::RectangleShape rect(sf::Vector2f(width, height));
-            rect.setFillColor(sf::Color(128, 128, 128));
-            float yPos = (height + spacing);
-            rect.setPosition(sf::Vector2f(0.f, yPos));
-            m_rects.push_back(rect);
-        //}
-    }
-};
-
-
 inline charLook randomChar() {
     constexpr int clothesLen = static_cast<int>(sizeof(clothesPalette) / sizeof(clothesPalette[0]));
     constexpr int hairLen = static_cast<int>(sizeof(hairPalette) / sizeof(hairPalette[0]));
@@ -593,7 +531,72 @@ inline charLook randomChar() {
     return charCharacter;
 }
 
-inline int getCustomSprites(std::string folderPath) {
-    return 1;
-}
-// hair color to kolor normalny, a clothes popierdolony, 
+class fillPiwa : public sf::Drawable, public sf::Transformable {
+private:
+    sf::Sprite bar;
+    int max;
+
+    void draw(sf::RenderTarget& target, sf::RenderStates states) const override {
+        states.transform *= getTransform();
+        target.draw(bar, states);
+    }
+
+public:
+    float BOTTOM_OFFSET = 8.f;
+    void addOffset(){
+        BOTTOM_OFFSET = 0;
+    };
+    void removeOffset(){
+        BOTTOM_OFFSET = 8.f;
+    };
+
+    fillPiwa(const sf::Texture& tex, int maxValue)
+        : bar(tex), max(maxValue)
+    {
+        auto size = tex.getSize();
+
+        bar.setOrigin({0.f, static_cast<float>(size.y)});
+
+        bar.setTextureRect({
+            {0, 0},
+            {static_cast<int>(size.x), static_cast<int>(size.y)}
+        });
+        
+    }
+
+    void setValue(int value) {
+        value = std::clamp(value, 0, max);
+
+        auto size = bar.getTexture().getSize();
+
+        float ratio = 1.f - static_cast<float>(value) / static_cast<float>(max);
+        int h = static_cast<int>(size.y * ratio);
+
+        bar.setTextureRect({
+            {0, 0},
+            {static_cast<int>(size.x), h}
+        });
+
+        bar.setPosition({0.f, static_cast<float>(size.y - h - BOTTOM_OFFSET)
+});
+
+    }
+};
+
+class ramkaPiwa : public sf::Drawable, public sf::Transformable {
+private:
+    sf::Sprite frame;
+
+    void draw(sf::RenderTarget& target, sf::RenderStates states) const override {
+        states.transform *= getTransform();
+        target.draw(frame, states);
+    }
+
+public:
+    ramkaPiwa(const sf::Texture& frameTex)
+        : frame(frameTex)
+    {
+        auto size = frameTex.getSize();
+        frame.setOrigin({0.f, static_cast<float>(size.y)});
+    }
+};

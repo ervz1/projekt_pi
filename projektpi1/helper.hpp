@@ -40,7 +40,10 @@ inline sf::Color clothesPalette[] = {
 };
 
 inline sf::Color hairPalette[] = {
-    sf::Color(255, 255, 255)
+    sf::Color(113, 69, 30),
+    sf::Color(223, 196, 98),
+    sf::Color(194, 93, 31),
+    sf::Color(54, 31, 17) 
 };
 
 inline sf::Color skinPalette[] = {
@@ -62,6 +65,13 @@ inline spritePalette mainPalette = {
     skinPalette
 };
 
+
+// hair, hat, face
+inline std::string paths[] = {
+    "assets/img/sprites/hair/",
+    "assets/img/sprites/hat/",
+    "assets/img/sprites/face/"
+};
 
 
 
@@ -265,7 +275,6 @@ public:
     }
 
     // -1 - facing left, 1 - facing right
-
     int facing = 1;
 
     void draw(sf::RenderWindow& window) {
@@ -390,6 +399,54 @@ private:
     }
 };
 
+// id: 0 - hair, 1 - hat, 2 - face
+class chooseDisp {
+public:
+    chooseDisp(
+        const sf::Vector2f& pos,
+        const sf::Color& color,
+        const int ID
+    ) : part({157.f, 354.f}) {
+        switch (ID)
+        {
+        case 0:
+            partType = "hair";
+            break;
+        case 1:
+            partType = "hat";
+            break;
+        case 2:
+            partType = "face";
+            break;
+        default:
+            break;
+        }
+        part.setPosition(pos);
+        textPath << paths[ID] << partType << "1.png";
+        std::cout << textPath.str() << std::endl;
+        text.loadFromFile(textPath.str());
+        part.setTexture(&text);
+        part.setScale({2.f, 2.f});
+    };
+    void draw(sf::RenderWindow& window) {
+        window.draw(part);
+    };
+    void setPos(sf::Vector2f pos) {
+        part.setPosition(pos);
+    };
+    void setPartID(int partID) {
+        textPath.str(std::string());
+        textPath << paths[ID] << partType << partID << ".png";
+        text.loadFromFile(textPath.str());
+        part.setTexture(&text);
+    }
+private:
+    sf::RectangleShape part;
+    sf::Texture text;
+    std::stringstream textPath;
+    std::string partType;
+    int ID;
+};
 
 class Button {
 public:
@@ -398,10 +455,10 @@ public:
         const sf::Color& color, 
         const sf::Color& hoverColor, 
         const std::string& textString, 
-        const sf::Font& font, 
+        const std::string& font, 
         unsigned int charSize, 
         const std::string& texture = "")
-        : shape(size), text(font, textString, charSize), baseColor(color), hoverColor(hoverColor) {
+        : shape(size), fontF(font), text(fontF, textString, charSize), baseColor(color), hoverColor(hoverColor) {
 
         shape.setPosition(position);
         if (!texture.empty() && b_texture.loadFromFile(texture)) {
@@ -429,6 +486,7 @@ public:
 private:
     sf::RectangleShape shape;
     sf::Text text;
+    sf::Font fontF;
     sf::Texture b_texture;
     sf::Color baseColor;
     sf::Color hoverColor;
@@ -535,5 +593,7 @@ inline charLook randomChar() {
     return charCharacter;
 }
 
-
+inline int getCustomSprites(std::string folderPath) {
+    return 1;
+}
 // hair color to kolor normalny, a clothes popierdolony, 

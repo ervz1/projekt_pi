@@ -14,17 +14,24 @@
 
 sf::Vector2f mainWin = { 800.0f, 600.0f };
 void updateViewViewport(const sf::RenderWindow&, sf::View&);
-enum class GameState { Menu, Game, GameMenu };
+enum class GameState { Menu, Game, GameMenu, CustomizeMenu };
 std::string buttText = "assets/img/button.png";
 sf::Texture mainMenuBG;
 sf::Texture gameBG;
 sf::RectangleShape logicalBackground(mainWin);
+sf::Font font;
+std::string fontS = "assets/fonts/DejaVuSans.ttf";
+Button playButton({ 254.f, 104.f }, { 273.f, 260.f }, sf::Color(96, 178, 37), sf::Color(109, 204, 42), "START", fontS, 30, buttText);
+Button customButton({254.f, 104.f}, { 273.f, 400.f }, sf::Color(100, 100, 100), sf::Color(150, 150, 150), "CUSTOM", fontS, 30, buttText);
+Button exitButton({ 254.f, 104.f }, { 273.f, 540.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), "WYJSCIE", fontS, 30, buttText);
+
 
 sf::Vector2f enemyBasePos = sf::Vector2f({ 50.0, 215.0 });
 sf::Vector2f playerBasePos = sf::Vector2f({ 750.0, 215.0 });
 
 charLook playerChar = { 1, 2, 4, sf::Color(255, 0, 0), sf::Color(0, 255, 0), sf::Color(0, 0, 255), sf::Color(255, 255, 0), sf::Color::White };
 charSprite playerSP(playerBasePos, playerChar);
+chooseDisp test({255.f, 255.f}, sf::Color::White, 0);
 
 std::random_device rd;
 std::mt19937 gen(rd());
@@ -135,7 +142,7 @@ int main()
     GameState currentState = GameState::Menu;
 
     // Assety
-    sf::Font font;
+    // sf::Font font;
     if (!font.openFromFile("assets/fonts/DejaVuSans.ttf")) return -1;
 
     sf::SoundBuffer buffer;
@@ -143,8 +150,10 @@ int main()
     
     // Przyciski 
     sf::Clock keyTimer;
-    Button playButton({ 254.f, 104.f }, { 273.f, 260.f }, sf::Color(96, 178, 37), sf::Color(109, 204, 42), "START", font, 30, buttText);
-    Button exitButton({ 254.f, 104.f }, { 273.f, 400.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), "WYJSCIE", font, 30, buttText);
+    // Button playButton({ 254.f, 104.f }, { 273.f, 260.f }, sf::Color(96, 178, 37), sf::Color(109, 204, 42), "START", font, 30, buttText);
+    // Button customButton({254.f, 104.f}, { 273.f, 400.f }, sf::Color(100, 100, 100), sf::Color(150, 150, 150), "CUSTOM", font, 30, buttText);
+    // Button exitButton({ 254.f, 104.f }, { 273.f, 540.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), "WYJSCIE", font, 30, buttText);
+
 
     // Tło
     if (!mainMenuBG.loadFromFile("assets/img/mainmenu.png")) return -1;
@@ -288,7 +297,7 @@ void eventLoop(const std::optional<sf::Event> &event, sf::RenderWindow &window, 
     }
 
     // 1.3 menu
-    else if (currentState == GameState::Menu)
+    else if (currentState == GameState::Menu || currentState == GameState::CustomizeMenu )
     {
         handleMenu(event, playButton, mousePos, currentState, exitButton, window);
     }
@@ -296,6 +305,9 @@ void eventLoop(const std::optional<sf::Event> &event, sf::RenderWindow &window, 
 
 void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::Vector2f &mousePos, GameState &currentState, Button &exitButton, sf::RenderWindow &window)
 {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Escape) && currentState == GameState::CustomizeMenu) {
+        currentState = GameState::Menu;        test.setPartID(2);
+    }
     if (playButton.isMouseOver(mousePos)) {
         playButton.hover();
     }
@@ -308,12 +320,16 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
     else {
         exitButton.unhover();
     }
+    if (customButton.isMouseOver(mousePos)) customButton.hover();
+    else customButton.unhover();
     if (const auto *mouseEvent = event->getIf<sf::Event::MouseButtonPressed>())
     {
         if (mouseEvent->button == sf::Mouse::Button::Left)
         {
             if (playButton.isMouseOver(mousePos))
                 currentState = GameState::Game;
+            if (customButton.isMouseOver(mousePos))
+                currentState = GameState::CustomizeMenu;
             if (exitButton.isMouseOver(mousePos))
                 window.close();
         }
@@ -371,9 +387,11 @@ void logic(GameState &currentState, GameStart &game,
 
     // ESC: reset do menu
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Escape)) {
-        logicalBackground.setTexture(&mainMenuBG);
-        currentState = GameState::Menu;
-        resetRound();
+        if (currentState == GameState::Game) {
+            logicalBackground.setTexture(&mainMenuBG);
+            currentState = GameState::Menu;
+            resetRound();
+        }
         return;
     }
 
@@ -696,7 +714,15 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
     if (currentState == GameState::Menu)
     {
         playButton.draw(window);
+        customButton.draw(window);
         exitButton.draw(window);
+    } else if (currentState == GameState::CustomizeMenu) {
+        playerSP.setPos(150.f, 280.f);
+        if(playerSP.facing == -1) {
+            playerSP.flip();
+        }
+        test.draw(window);
+        playerSP.draw(window);
     }
     else if (currentState == GameState::Game)
     {

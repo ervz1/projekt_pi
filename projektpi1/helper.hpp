@@ -494,6 +494,7 @@ private:
     sf::Texture faceText;
     int maxPID;
 };
+
 //size, pos, color, hovColor, text, font, charSize, texture
 class Button {
 public:
@@ -501,25 +502,60 @@ public:
         const sf::Vector2f& position, 
         const sf::Color& color, 
         const sf::Color& hoverColor, 
-        const std::string& textString, 
-        const std::string& font, 
-        unsigned int charSize, 
-        const std::string& texture = "")
-        : shape(size), fontF(font), text(fontF, textString, charSize), baseColor(color), hoverColor(hoverColor) {
+        const std::string& texture,
+        const std::string& textString = "",
+        const std::string& font = "",
+        unsigned int charSize = 0)
+        : shape(size), baseColor(color), text(fontF, textString, charSize), hoverColor(hoverColor), textureStr(texture){
+
+        if (!textString.empty()) {
+            if (fontF.openFromFile(font)) {
+                text.setString(textString);
+                text.setCharacterSize(charSize);
+                text.setFont(fontF);
+                hasText = true;
+            }
+        }
 
         shape.setPosition(position);
-        if (!texture.empty() && b_texture.loadFromFile(texture)) {
+        if (!textureStr.empty() && b_texture.loadFromFile(textureStr)) {
             shape.setTexture(&b_texture);
             shape.setFillColor(color);
+            std::cout << "YES TEXTURE" <<std::endl;
+            std::cout << textureStr << std::endl;
         }
         else {
+            std::cout << "NO TEXTURE" << std::endl;
             shape.setFillColor(color);
         }
-        if (textString != "") text.setPosition(sf::Vector2f(position.x + size.x / 2.0f - text.getLocalBounds().size.x / 2.0f, position.y + size.y / 2.0f - text.getLocalBounds().size.y / 2.0f - 7.0f));
+        if (hasText) text.setPosition(sf::Vector2f(position.x + size.x / 2.0f - text.getLocalBounds().size.x / 2.0f, position.y + size.y / 2.0f - text.getLocalBounds().size.y / 2.0f - 7.0f));
     }
+
+    Button(const Button& other)
+        : shape(other.shape),
+        baseColor(other.baseColor),
+        hoverColor(other.hoverColor),
+        textureStr(other.textureStr),
+        b_texture(other.b_texture), 
+        fontF(other.fontF),         
+        text(other.text),
+        hasText(other.hasText)
+    {
+        if (!textureStr.empty()) {
+            shape.setTexture(&b_texture);
+        }
+        if (hasText) {
+            text.setFont(fontF);
+        }
+    }
+
+    sf::Color getColor() const {
+        return baseColor;
+    }
+
     void draw(sf::RenderWindow& window) {
         window.draw(shape);
-        window.draw(text);
+        if (hasText) window.draw(text);
     }
     bool isMouseOver(const sf::Vector2f& mousePos) {
         return shape.getGlobalBounds().contains(mousePos);
@@ -531,12 +567,14 @@ public:
         shape.setFillColor(baseColor);
     }
 private:
+    std::string textureStr;
     sf::RectangleShape shape;
     sf::Text text;
     sf::Font fontF;
     sf::Texture b_texture;
     sf::Color baseColor;
     sf::Color hoverColor;
+    bool hasText{false};
 };
 
 inline charLook randomChar() {
@@ -579,6 +617,56 @@ inline charLook randomChar() {
     //    " skinColor: " << (int)skinColor.r << " " << (int)skinColor.g << " " << (int)skinColor.b << std::endl; 
     return charCharacter;
 }
+
+class colorSelectScreen {
+public:
+    colorSelectScreen() {}
+
+    colorSelectScreen(sf::Color colArr[], int partID = 0, int colorCount = 0) {
+        setup(colArr, colorCount);
+    }
+
+    void setup(sf::Color colArr[], int colorCount) {
+        buttonArr.clear();
+        float startX = 50.f;
+        float startY = 50.f;
+
+        for (int i = 0; i < colorCount; ++i) {
+            buttonArr.push_back(Button(
+                sf::Vector2f(40.f, 40.f),
+                sf::Vector2f(startX + (i % 8) * 42.f, startY + (i / 8) * 42.f),
+                colArr[i],
+                sf::Color(colArr[i].r + 20, colArr[i].g + 20, colArr[i].b + 20),
+                "assets/img/colorSelectBlank.png"
+            ));
+        }
+    }
+
+    void draw(sf::RenderWindow& wind) {
+        for (Button& button : buttonArr) {
+            button.draw(wind);
+        }
+    }
+
+    void update(sf::Vector2f mousePos) {
+        for (Button& button : buttonArr) {
+            if (button.isMouseOver(mousePos)) button.hover();
+            else button.unhover();
+        }
+    }
+
+    std::optional<sf::Color> getClickedColor(sf::Vector2f mousePos) {
+        for (Button& button : buttonArr) {
+            if (button.isMouseOver(mousePos)) {
+                return button.getColor();
+            }
+        }
+        return std::nullopt;
+    }
+
+private:
+    std::vector <Button> buttonArr;
+};
 
 class fillPiwa : public sf::Drawable, public sf::Transformable {
 private:

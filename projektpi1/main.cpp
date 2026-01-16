@@ -9,8 +9,9 @@
 #include <fstream>
 #include "helper.hpp"
 #include <cmath> 
+#include <vector>
 
-
+int activeColorMode = 0;
 sf::Vector2f mainWin = { 800.0f, 600.0f };
 void updateViewViewport(const sf::RenderWindow&, sf::View&);
 enum class GameState { Menu, Game, GameMenu, CustomizeMenu };
@@ -20,15 +21,20 @@ sf::Texture gameBG;
 sf::Texture menuBG;
 sf::Texture mirrorText;
 sf::Texture chooseBGSText;
+sf::Texture custShirtText;
+sf::Texture custPantsText;
+sf::Texture custShoesText;
+sf::Texture custClothesBGText("assets/img/clothesBG.png");
 sf::RectangleShape logicalBackground(mainWin);
 sf::Font font;
 sf::RectangleShape mirror;
 sf::RectangleShape chooseBGS;
 std::string fontS = "assets/fonts/DejaVuSans.ttf";
 
-Button playButton({ 228.f, 95.f }, { 273.f, 250.f }, sf::Color(96, 178, 37), sf::Color(109, 204, 42), "START", fontS, 26, buttText);
-Button customButton({ 228.f, 95.f }, { 273.f, 360.f }, sf::Color(100, 100, 100), sf::Color(150, 150, 150), "CUSTOM", fontS, 26, buttText);
-Button exitButton({ 228.f, 95.f }, { 273.f, 470.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), "WYJSCIE", fontS, 26, buttText);
+
+Button playButton({ 228.f, 95.f }, { 273.f, 250.f }, sf::Color(96, 178, 37), sf::Color(109, 204, 42), buttText, "START", fontS, 26);
+Button customButton({ 228.f, 95.f }, { 273.f, 360.f }, sf::Color(100, 100, 100), sf::Color(150, 150, 150), buttText, "CUSTOM", fontS, 26);
+Button exitButton({ 228.f, 95.f }, { 273.f, 470.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), buttText, "WYJSCIE", fontS, 26);
 
 
 
@@ -46,16 +52,36 @@ chooseDisp customFaceDisp({ 300.f, 162.f }, 2, 2);
 
 std::string arrR = "assets/img/arrRight.png";
 std::string arrL = "assets/img/arrLeft.png";
+std::string colSelPath = "assets/img/colorSelect.png";
+std::string colSelBPath = "assets/img/colorSelectBlank.png";
 
 
-Button customHairRight({ 45.f, 39.f }, {722.f, 154.f}, sf::Color::White, sf::Color::Green, "", fontS, 0, arrR);
-Button customHairLeft({ 46.f, 40.f }, {480.f, 151.f}, sf::Color::White, sf::Color::Green, "", fontS, 0, arrL);
+Button customHairRight({ 45.f, 39.f }, {722.f, 154.f}, sf::Color(230, 230, 230), sf::Color::White, arrR, "", fontS, 0);
+Button customHairLeft({ 46.f, 40.f }, {480.f, 151.f}, sf::Color(230, 230, 230), sf::Color::White, arrL, "", fontS, 0);
+Button customHairColor({72.f, 67.f}, {686, 207}, sf::Color(200, 200, 200), sf::Color::White, colSelPath, "", fontS, 0);
 
-Button customHatRight({ 45.f, 39.f }, {540.f, 60.f}, sf::Color::White, sf::Color::Green, "", fontS, 0, arrR);
-Button customHatLeft({ 46.f, 40.f }, {298.f, 57.f}, sf::Color::White, sf::Color::Green, "", fontS, 0, arrL);
+Button customHatRight({ 45.f, 39.f }, {540.f, 60.f}, sf::Color(230, 230, 230), sf::Color::White, arrR, "", fontS, 0);
+Button customHatLeft({ 46.f, 40.f }, {298.f, 57.f}, sf::Color(230, 230, 230), sf::Color::White, arrL, "", fontS, 0);
 
-Button customFaceRight({ 45.f, 39.f }, {544.f, 277.f}, sf::Color::White, sf::Color::Green, "", fontS, 0, arrR);
-Button customFaceLeft({ 46.f, 40.f }, {302.f, 274.f}, sf::Color::White, sf::Color::Green, "", fontS, 0, arrL);
+Button customFaceRight({ 45.f, 39.f }, {544.f, 277.f}, sf::Color(230, 230, 230), sf::Color::White, arrR, "", fontS, 0);
+Button customFaceLeft({ 46.f, 40.f }, {302.f, 274.f}, sf::Color(230, 230, 230), sf::Color::White, arrL, "", fontS, 0);
+Button customSkinColor({ 72.f, 67.f }, { 510, 330 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath, "", fontS, 0);
+
+Button customShirtColorButt({ 72.f, 67.f }, { 646, 496 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath, "", fontS, 0);
+Button customPantsColorButt({ 72.f, 67.f }, { 470, 496 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath, "", fontS, 0);
+Button customShoesColorButt({ 72.f, 67.f }, { 282, 496 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath, "", fontS, 0);
+
+sf::RectangleShape customClothesBG({474, 122});
+sf::RectangleShape customShoesColor({150, 52});
+sf::RectangleShape customPantsColor({140, 63});
+sf::RectangleShape customShirtColor({ 106, 86 });
+
+colorSelectScreen clothesColorSelect(clothesPalette, 0, 24);
+
+Button diceLook({ 57.f, 49.f }, { 148, 41 }, sf::Color(230, 230, 230), sf::Color::White, "assets/img/dice.png", "", fontS, 0);
+
+
+
 
 std::random_device rd;
 std::mt19937 gen(rd());
@@ -63,6 +89,7 @@ std::mt19937 gen(rd());
 charLook enemyChar = randomChar();
 charSprite enemySP(enemyBasePos, enemyChar);
 
+std::vector <sf::Color> chooseColorScreen[24];
 
 struct GameStart {
     sf::Vector2f velocity = { 0.f, 0.f };
@@ -193,6 +220,9 @@ int main()
     if (!menuBG.loadFromFile("assets/img/brickbg.png")) return -1;
     if (!mirrorText.loadFromFile("assets/img/mirror.png")) return -1;
     if (!chooseBGSText.loadFromFile("assets/img/chooseBGS.png")) return -1;
+    if (!custShirtText.loadFromFile("assets/img/customShirt.png")) return -1;
+    if (!custPantsText.loadFromFile("assets/img/customPants.png")) return -1;
+    if (!custShoesText.loadFromFile("assets/img/customShoes.png")) return -1;
 
     logicalBackground.setPosition({ 0.f, 0.f });
     logicalBackground.setTexture(&mainMenuBG);
@@ -203,6 +233,19 @@ int main()
     chooseBGS.setTexture(&chooseBGSText);
     chooseBGS.setSize({408.f, 360.f});
     chooseBGS.setPosition({ 328.f, 6.f });
+
+    customClothesBG.setTexture(&custClothesBGText);
+    customClothesBG.setPosition({322, 400});
+
+    customShirtColor.setTexture(&custShirtText);
+    customShirtColor.setPosition({665, 421});
+
+    customPantsColor.setTexture(&custPantsText);
+    customPantsColor.setPosition({496, 441});
+
+    customShoesColor.setTexture(&custShoesText);
+    customShoesColor.setPosition({321, 451});
+
     // Obiekty - puszki
     /*sf::CircleShape can(15.f);
     can.setFillColor(sf::Color::Yellow);
@@ -329,13 +372,21 @@ void eventLoop(const std::optional<sf::Event> &event, sf::RenderWindow &window, 
 
 void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::Vector2f &mousePos, GameState &currentState, Button &exitButton, sf::RenderWindow &window)
 {
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Escape) && currentState == GameState::CustomizeMenu) {
-        currentState = GameState::Menu;        
+    if (const auto* keyEvent = event->getIf<sf::Event::KeyPressed>())
+    {
+        if (keyEvent->scancode == sf::Keyboard::Scancode::Escape)
+        {
+            if (currentState == GameState::CustomizeMenu)
+            {
+                if (activeColorMode != 0) {
+                    activeColorMode = 0;
+                }
+                else {
+                    currentState = GameState::Menu;
+                }
+            }
+        }
     }
-    //if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Right) && currentState == GameState::CustomizeMenu) {
-    //    customHairDisp.pIDstep(1);
-    //    customFaceDisp.setColor(hairPalette[2]);
-    //}
     if (playButton.isMouseOver(mousePos)) {
         playButton.hover();
     }
@@ -349,6 +400,9 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
         exitButton.unhover();
     }
 
+
+    diceLook.isMouseOver(mousePos) ? diceLook.hover() : diceLook.unhover();
+
     customHairRight.isMouseOver(mousePos) ? customHairRight.hover() : customHairRight.unhover();
     customHairLeft.isMouseOver(mousePos) ? customHairLeft.hover() : customHairLeft.unhover();
 
@@ -357,6 +411,12 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
 
     customFaceRight.isMouseOver(mousePos) ? customFaceRight.hover() : customFaceRight.unhover();
     customFaceLeft.isMouseOver(mousePos) ? customFaceLeft.hover() : customFaceLeft.unhover();
+
+    customHairColor.isMouseOver(mousePos) ? customHairColor.hover() : customHairColor.unhover();
+
+    if (activeColorMode != 0) {
+        clothesColorSelect.update(mousePos);
+    }
 
     if (customButton.isMouseOver(mousePos)) customButton.hover();
     else customButton.unhover();
@@ -374,37 +434,94 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
                     window.close();
             }
             if (currentState == GameState::CustomizeMenu) {
-                if (customHairRight.isMouseOver(mousePos)) { 
-                    customHairDisp.pIDstep(1);
-                    playerChar.hairID = customHairDisp.partID;
-                    playerSP.changeLook(playerChar);
-                };
-                if (customHairLeft.isMouseOver(mousePos)) {
-                    customHairDisp.pIDstep(-1);
-                    playerChar.hairID = customHairDisp.partID;
-                    playerSP.changeLook(playerChar);
-                }
+                if (activeColorMode != 0) {
 
-                if (customHatRight.isMouseOver(mousePos)) {
-                    customHatDisp.pIDstep(1);
-                    playerChar.hatID = customHatDisp.partID;
-                    playerSP.changeLook(playerChar);
-                }
-                if (customHatLeft.isMouseOver(mousePos)) {
-                    customHatDisp.pIDstep(-1);
-                    playerChar.hatID = customHatDisp.partID;
-                    playerSP.changeLook(playerChar);
-                }
+                    std::optional<sf::Color> pickedColor = clothesColorSelect.getClickedColor(mousePos);
 
-                if (customFaceRight.isMouseOver(mousePos)) {
-                    customFaceDisp.pIDstep(1);
-                    playerChar.faceID = customFaceDisp.partID;
-                    playerSP.changeLook(playerChar);
+                    if (pickedColor.has_value()) {
+                        sf::Color col = pickedColor.value();
+
+                        switch (activeColorMode) {
+                        case 1: playerChar.hairColor = col; customHairDisp.setColor(col); break;
+                        case 2: playerChar.skinColor = col; customFaceDisp.setColor(col); break;
+                        case 3: playerChar.topColor = col; customShirtColor.setFillColor(col); break;
+                        case 4: playerChar.pantsColor = col; customPantsColor.setFillColor(col); break;
+                        case 5: playerChar.shoeColor = col; customShoesColor.setFillColor(col); break;
+                        }
+
+                        playerSP.changeLook(playerChar);
+                    }
                 }
-                if (customFaceLeft.isMouseOver(mousePos)) {
-                    customFaceDisp.pIDstep(-1);
-                    playerChar.faceID = customFaceDisp.partID;
-                    playerSP.changeLook(playerChar);
+                else {
+                    if (diceLook.isMouseOver(mousePos)) {
+                        playerChar = randomChar();
+                        customHairDisp.setPartID(playerChar.hairID);
+                        customHairDisp.setColor(playerChar.hairColor);
+                        customHatDisp.setPartID(playerChar.hatID);
+                        customFaceDisp.setPartID(playerChar.faceID);
+                        customFaceDisp.setColor(playerChar.skinColor);
+                        customShirtColor.setFillColor(playerChar.topColor);
+                        customPantsColor.setFillColor(playerChar.pantsColor);
+                        customShoesColor.setFillColor(playerChar.shoeColor);
+                        playerSP.changeLook(playerChar);
+                    };
+                    if (customHairRight.isMouseOver(mousePos)) {
+                        customHairDisp.pIDstep(1);
+                        playerChar.hairID = customHairDisp.partID;
+                        playerSP.changeLook(playerChar);
+                    };
+                    if (customHairLeft.isMouseOver(mousePos)) {
+                        customHairDisp.pIDstep(-1);
+                        playerChar.hairID = customHairDisp.partID;
+                        playerSP.changeLook(playerChar);
+                    }
+
+                    if (customHatRight.isMouseOver(mousePos)) {
+                        customHatDisp.pIDstep(1);
+                        playerChar.hatID = customHatDisp.partID;
+                        playerSP.changeLook(playerChar);
+                    }
+                    if (customHatLeft.isMouseOver(mousePos)) {
+                        customHatDisp.pIDstep(-1);
+                        playerChar.hatID = customHatDisp.partID;
+                        playerSP.changeLook(playerChar);
+                    }
+
+                    if (customFaceRight.isMouseOver(mousePos)) {
+                        customFaceDisp.pIDstep(1);
+                        playerChar.faceID = customFaceDisp.partID;
+                        playerSP.changeLook(playerChar);
+                    }
+                    if (customFaceLeft.isMouseOver(mousePos)) {
+                        customFaceDisp.pIDstep(-1);
+                        playerChar.faceID = customFaceDisp.partID;
+                        playerSP.changeLook(playerChar);
+                    }
+
+                    if (customHairColor.isMouseOver(mousePos)) {
+                        activeColorMode = 1;
+                        clothesColorSelect.setup(hairPalette, 4);
+                    }
+
+                    else if (customSkinColor.isMouseOver(mousePos)) {
+                        activeColorMode = 2;
+                        clothesColorSelect.setup(skinPalette, 4);
+                    }
+
+                    else if (customShirtColorButt.isMouseOver(mousePos)) {
+                        activeColorMode = 3;
+                        clothesColorSelect.setup(clothesPalette, 24);
+                    }
+
+                    else if (customPantsColorButt.isMouseOver(mousePos)) {
+                        activeColorMode = 4;
+                        clothesColorSelect.setup(clothesPalette, 24);
+                    }
+
+                    else if (customShoesColorButt.isMouseOver(mousePos)) {
+                        activeColorMode = 5;
+                        clothesColorSelect.setup(clothesPalette, 24);
+                    }
                 }
             }
         }
@@ -783,13 +900,21 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
         playButton.draw(window);
         customButton.draw(window);
         exitButton.draw(window);
-    } else if (currentState == GameState::CustomizeMenu) {
-        playerSP.setPos(150.f, 280.f);
-        if(playerSP.facing == -1) {
+    }
+    else if (currentState == GameState::CustomizeMenu) {
+        playerSP.setPos(170.f, 300.f);
+        if (playerSP.facing == -1) {
             playerSP.flip();
         }
         window.draw(mirror);
         window.draw(chooseBGS);
+        window.draw(customClothesBG);
+        window.draw(customShirtColor);
+        window.draw(customPantsColor);
+        window.draw(customShoesColor);
+        customShirtColorButt.draw(window);
+        customPantsColorButt.draw(window);
+        customShoesColorButt.draw(window);
         customHatDisp.draw(window);
         customHairDisp.draw(window);
         playerSP.draw(window);
@@ -800,6 +925,13 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
         customHatLeft.draw(window);
         customFaceRight.draw(window);
         customFaceLeft.draw(window);
+        diceLook.draw(window);
+        customHairColor.draw(window);
+        customSkinColor.draw(window);
+        if (activeColorMode != 0) {
+            clothesColorSelect.draw(window);
+        }
+
     }
     else if (currentState == GameState::Game)
     {
@@ -851,5 +983,3 @@ void drawBars(GameStart &game, canSprite &ball, sf::RenderWindow &window)
         }
     }
 }
-
-

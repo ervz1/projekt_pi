@@ -14,7 +14,9 @@
 int activeColorMode = 0;
 sf::Vector2f mainWin = { 800.0f, 600.0f };
 void updateViewViewport(const sf::RenderWindow&, sf::View&);
+
 enum class GameState { Menu, Game, GameMenu, CustomizeMenu };
+
 std::string buttText = "assets/img/button.png";
 sf::Texture mainMenuBG;
 sf::Texture gameBG;
@@ -31,13 +33,9 @@ sf::RectangleShape mirror;
 sf::RectangleShape chooseBGS;
 std::string fontS = "assets/fonts/DejaVuSans.ttf";
 
-
 Button playButton({ 228.f, 95.f }, { 273.f, 250.f }, sf::Color(96, 178, 37), sf::Color(109, 204, 42), buttText, "START", fontS, 26);
 Button customButton({ 228.f, 95.f }, { 273.f, 360.f }, sf::Color(100, 100, 100), sf::Color(150, 150, 150), buttText, "CUSTOM", fontS, 26);
 Button exitButton({ 228.f, 95.f }, { 273.f, 470.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), buttText, "WYJSCIE", fontS, 26);
-
-
-
 
 sf::Vector2f enemyBasePos = sf::Vector2f({ 50.0, 215.0 });
 sf::Vector2f playerBasePos = sf::Vector2f({ 750.0, 215.0 });
@@ -54,7 +52,6 @@ std::string arrR = "assets/img/arrRight.png";
 std::string arrL = "assets/img/arrLeft.png";
 std::string colSelPath = "assets/img/colorSelect.png";
 std::string colSelBPath = "assets/img/colorSelectBlank.png";
-
 
 Button customHairRight({ 45.f, 39.f }, {722.f, 154.f}, sf::Color(230, 230, 230), sf::Color::White, arrR, "", fontS, 0);
 Button customHairLeft({ 46.f, 40.f }, {480.f, 151.f}, sf::Color(230, 230, 230), sf::Color::White, arrL, "", fontS, 0);
@@ -124,6 +121,10 @@ struct GameStart {
 
     bool graczBiegnie = false;
     bool botBiegnie   = false;
+
+
+    bool B_byl_wcisniety = false;
+    bool gracz_podniosl  = false;
 
     bool graczWraca = false;
     bool botWraca   = false;
@@ -642,25 +643,39 @@ void logic(GameState &currentState, GameStart &game,
     }
 
     // ===== 3 RUCH PO TRAFIENIU =====
+    // podniesienie puszki:
+    bool B_jest_wcisniety   = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::B);
+        bool B_zostal_nacisniety = B_jest_wcisniety && !game.B_byl_wcisniety;
+        game.B_byl_wcisniety    = B_jest_wcisniety;
+       
+        if (B_zostal_nacisniety) {
+            game.gracz_podniosl = true; 
+            can.standUp();
+        }
+
+
     // gracz bieg
     if (game.graczBiegnie && spacePressed)
     {
         const float targetX = game.graczWraca ? game.graczHomeX : midPlayerX;
         const float dir     = (targetX > game.graczX) ? 1.f : -1.f;
         game.graczX += dir * PLAYER_RUN_STEP * 2;
-
+        
         const bool reached =
             (dir > 0.f && game.graczX >= targetX) ||
             (dir < 0.f && game.graczX <= targetX);
 
-        if (reached) {
+    
+        if (reached && game.gracz_podniosl) {
+            game.gracz_podniosl = false;   
             game.graczX = targetX;
+
 
             if (!game.graczWraca) {
                 playerSP.flip();
                 game.graczWraca = true;
+                game.gracz_podniosl = true;
                 //can.rotate();
-                can.standUp();
             } else {
                 playerSP.flip();
                 game.graczWraca   = false;

@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <random>
 #include <algorithm>
+#include <fstream>
 
 // tu wszystkie funkcje i klasy
 
@@ -48,10 +49,10 @@ inline sf::Color hairPalette[] = {
 };
 
 inline sf::Color skinPalette[] = {
-    sf::Color(90,68,18),
-    sf::Color(225,212,148),
-    sf::Color(224,203,184),
-    sf::Color(255, 255, 255)
+    sf::Color(231,190,128),
+    sf::Color(231, 178, 128),
+    sf::Color(178,112,50),
+    sf::Color(101,53,6)
 };
 
 struct spritePalette {
@@ -521,12 +522,6 @@ public:
         if (!textureStr.empty() && b_texture.loadFromFile(textureStr)) {
             shape.setTexture(&b_texture);
             shape.setFillColor(color);
-            std::cout << "YES TEXTURE" <<std::endl;
-            std::cout << textureStr << std::endl;
-        }
-        else {
-            std::cout << "NO TEXTURE" << std::endl;
-            shape.setFillColor(color);
         }
         if (hasText) text.setPosition(sf::Vector2f(position.x + size.x / 2.0f - text.getLocalBounds().size.x / 2.0f, position.y + size.y / 2.0f - text.getLocalBounds().size.y / 2.0f - 7.0f));
     }
@@ -628,13 +623,13 @@ public:
 
     void setup(sf::Color colArr[], int colorCount) {
         buttonArr.clear();
-        float startX = 50.f;
-        float startY = 50.f;
+        float startX = 74.f;
+        float startY = 187.f;
 
         for (int i = 0; i < colorCount; ++i) {
             buttonArr.push_back(Button(
-                sf::Vector2f(40.f, 40.f),
-                sf::Vector2f(startX + (i % 8) * 42.f, startY + (i / 8) * 42.f),
+                sf::Vector2f(72.f, 67.f),
+                sf::Vector2f(startX + (i % 8) * 83.f, startY + (i / 8) * 75.f),
                 colArr[i],
                 sf::Color(colArr[i].r + 20, colArr[i].g + 20, colArr[i].b + 20),
                 "assets/img/colorSelectBlank.png"
@@ -737,3 +732,48 @@ public:
         frame.setOrigin({0.f, static_cast<float>(size.y)});
     }
 };
+
+inline void saveCharacterToFile(const charLook& character) {
+    std::ofstream file("save.txt");
+    if (file.is_open()) {
+        file << character.hatID << " "
+            << character.hairID << " "
+            << character.faceID << "\n";
+
+        auto saveColor = [&](sf::Color c) {
+            file << (int)c.r << " " << (int)c.g << " " << (int)c.b << "\n";
+            };
+        saveColor(character.topColor);
+        saveColor(character.pantsColor);
+        saveColor(character.shoeColor);
+        saveColor(character.hairColor);
+        saveColor(character.skinColor);
+
+        file.close();
+    }
+}
+
+inline charLook loadCharacterFromFile() {
+    std::ifstream file("save.txt");
+    if (!file.is_open()) {
+        return randomChar();
+    }
+
+    charLook loaded;
+    int r, g, b;
+
+    file >> loaded.hatID >> loaded.hairID >> loaded.faceID;
+
+    auto loadColor = [&]() -> sf::Color {
+        file >> r >> g >> b;
+        return sf::Color(r, g, b);
+        };
+    loaded.topColor = loadColor();
+    loaded.pantsColor = loadColor();
+    loaded.shoeColor = loadColor();
+    loaded.hairColor = loadColor();
+    loaded.skinColor = loadColor();
+
+    file.close();
+    return loaded;
+}

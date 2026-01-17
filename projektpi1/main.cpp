@@ -11,14 +11,16 @@
 #include <cmath> 
 #include <vector>
 
+// 1 - hair, 2 - skin, 3 - shirt, 4 - pants, 5 - shoes
 int activeColorMode = 0;
+
 sf::Vector2f mainWin = { 800.0f, 600.0f };
 void updateViewViewport(const sf::RenderWindow&, sf::View&);
 
 enum class GameState { Menu, Game, GameMenu, CustomizeMenu };
 
 std::string buttText = "assets/img/button.png";
-sf::Texture mainMenuBG;
+sf::Texture logoText("assets/img/logo.png");
 sf::Texture gameBG;
 sf::Texture menuBG;
 sf::Texture mirrorText;
@@ -27,12 +29,14 @@ sf::Texture custShirtText;
 sf::Texture custPantsText;
 sf::Texture custShoesText;
 sf::Texture custClothesBGText("assets/img/clothesBG.png");
+sf::Texture colorSelectBGText("assets/img/colorSelectBG.png");
 sf::RectangleShape logicalBackground(mainWin);
 sf::Font font;
 sf::RectangleShape mirror;
 sf::RectangleShape chooseBGS;
 std::string fontS = "assets/fonts/DejaVuSans.ttf";
 
+sf::RectangleShape logo({645, 239});
 Button playButton({ 228.f, 95.f }, { 273.f, 250.f }, sf::Color(96, 178, 37), sf::Color(109, 204, 42), buttText, "START", fontS, 26);
 Button customButton({ 228.f, 95.f }, { 273.f, 360.f }, sf::Color(100, 100, 100), sf::Color(150, 150, 150), buttText, "CUSTOM", fontS, 26);
 Button exitButton({ 228.f, 95.f }, { 273.f, 470.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), buttText, "WYJSCIE", fontS, 26);
@@ -40,13 +44,12 @@ Button exitButton({ 228.f, 95.f }, { 273.f, 470.f }, sf::Color(178, 37, 37), sf:
 sf::Vector2f enemyBasePos = sf::Vector2f({ 50.0, 215.0 });
 sf::Vector2f playerBasePos = sf::Vector2f({ 750.0, 215.0 });
 
-charLook playerChar = { 1, 2, 4, sf::Color(255, 0, 0), sf::Color(0, 255, 0), sf::Color(0, 0, 255), sf::Color(255, 255, 0), sf::Color::White };
-
+charLook playerChar = loadCharacterFromFile();
 charSprite playerSP(playerBasePos, playerChar);
 
-chooseDisp customHairDisp({490.f, 90.f}, 0, 2);
-chooseDisp customHatDisp({ 308.f, 6.f }, 1, 1);
-chooseDisp customFaceDisp({ 300.f, 162.f }, 2, 2);
+chooseDisp customHairDisp({490.f, 90.f}, 0, 0);
+chooseDisp customHatDisp({ 308.f, 6.f }, 1, 0);
+chooseDisp customFaceDisp({ 300.f, 162.f }, 2, 0);
 
 std::string arrR = "assets/img/arrRight.png";
 std::string arrL = "assets/img/arrLeft.png";
@@ -73,6 +76,7 @@ sf::RectangleShape customShoesColor({150, 52});
 sf::RectangleShape customPantsColor({140, 63});
 sf::RectangleShape customShirtColor({ 106, 86 });
 
+sf::RectangleShape colorSelectBG({799, 422});
 colorSelectScreen clothesColorSelect(clothesPalette, 0, 24);
 
 Button diceLook({ 57.f, 49.f }, { 148, 41 }, sf::Color(230, 230, 230), sf::Color::White, "assets/img/dice.png", "", fontS, 0);
@@ -175,9 +179,23 @@ void drinkCounterEnemy(GameStart& game, fillPiwa &visEnemyBar);
 
 int main()
 {   
-    // SETUP
+
     GameStart game;
     playerSP.flip(-1), game.graczFacingRight = false;
+    logo.setTexture(&logoText);
+    logo.setOrigin(logo.getGeometricCenter());
+    logo.setPosition(logo.getGeometricCenter() + sf::Vector2f(87.f, 17.f));
+    
+
+    customHairDisp.setPartID(playerChar.hairID);
+    customHatDisp.setPartID(playerChar.hatID);
+    customFaceDisp.setPartID(playerChar.faceID);
+    customHairDisp.setColor(playerChar.hairColor);
+    customFaceDisp.setColor(playerChar.skinColor);
+    customShoesColor.setFillColor(playerChar.shoeColor);
+    customPantsColor.setFillColor(playerChar.pantsColor);
+    customShirtColor.setFillColor(playerChar.topColor);
+
 
     //  Rozmiar okna, resize
     sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "Flanki");
@@ -216,7 +234,7 @@ int main()
 
 
     // Tło
-    if (!mainMenuBG.loadFromFile("assets/img/mainmenu.png")) return -1;
+    //if (!mainMenuBG.loadFromFile("assets/img/mainmenu.png")) return -1;
     if (!gameBG.loadFromFile("assets/img/gamebg.png")) return -1;
     if (!menuBG.loadFromFile("assets/img/brickbg.png")) return -1;
     if (!mirrorText.loadFromFile("assets/img/mirror.png")) return -1;
@@ -226,7 +244,7 @@ int main()
     if (!custShoesText.loadFromFile("assets/img/customShoes.png")) return -1;
 
     logicalBackground.setPosition({ 0.f, 0.f });
-    logicalBackground.setTexture(&mainMenuBG);
+    logicalBackground.setTexture(&menuBG);
 
     mirror.setTexture(&mirrorText);
     mirror.setSize({275.f, 421.f});
@@ -246,6 +264,9 @@ int main()
 
     customShoesColor.setTexture(&custShoesText);
     customShoesColor.setPosition({321, 451});
+
+    colorSelectBG.setTexture(&colorSelectBGText);
+    colorSelectBG.setPosition({ 0, 106 });
 
     // Obiekty - puszki
     /*sf::CircleShape can(15.f);
@@ -315,14 +336,18 @@ int main()
     // fizyka i czas
     float gravity = 980.f;
     sf::Clock clock;
-
+    float totalTime = 0;
     while (window.isOpen()) {
-
         if (currentState == GameState::Game) {
             logicalBackground.setTexture(&gameBG);
         }
 
         float dt = clock.restart().asSeconds();
+
+        totalTime += dt;
+        float scaleX = 1.f + 0.07 * std::sin(totalTime*2);
+        float scaleY = 1.f + 0.07 * std::cos(totalTime * 2);
+        logo.setScale({ scaleX, scaleY });
 
         sf::Vector2i mousePosI = sf::Mouse::getPosition(window);
         sf::Vector2f mousePosUI = window.mapPixelToCoords(mousePosI); // bez view
@@ -415,6 +440,12 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
 
     customHairColor.isMouseOver(mousePos) ? customHairColor.hover() : customHairColor.unhover();
 
+    customSkinColor.isMouseOver(mousePos) ? customSkinColor.hover() : customSkinColor.unhover();
+    customShirtColorButt.isMouseOver(mousePos) ? customShirtColorButt.hover() : customShirtColorButt.unhover();
+    customPantsColorButt.isMouseOver(mousePos) ? customPantsColorButt.hover() : customPantsColorButt.unhover();
+    customShoesColorButt.isMouseOver(mousePos) ? customShoesColorButt.hover() : customShoesColorButt.unhover();
+
+
     if (activeColorMode != 0) {
         clothesColorSelect.update(mousePos);
     }
@@ -427,14 +458,17 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
         {
             if (currentState == GameState::Menu) {
                 if (playButton.isMouseOver(mousePos))
+                {
+                    playerSP.flip(-1);
                     currentState = GameState::Game;
-                if (customButton.isMouseOver(mousePos))
+                }
+                else if (customButton.isMouseOver(mousePos)) {
                     currentState = GameState::CustomizeMenu;
-                logicalBackground.setTexture(&menuBG);
-                if (exitButton.isMouseOver(mousePos))
-                    window.close();
+                    logicalBackground.setTexture(&menuBG);
+                } else if (exitButton.isMouseOver(mousePos)) window.close();
             }
             if (currentState == GameState::CustomizeMenu) {
+                saveCharacterToFile(playerChar);
                 if (activeColorMode != 0) {
 
                     std::optional<sf::Color> pickedColor = clothesColorSelect.getClickedColor(mousePos);
@@ -443,11 +477,11 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
                         sf::Color col = pickedColor.value();
 
                         switch (activeColorMode) {
-                        case 1: playerChar.hairColor = col; customHairDisp.setColor(col); break;
-                        case 2: playerChar.skinColor = col; customFaceDisp.setColor(col); break;
-                        case 3: playerChar.topColor = col; customShirtColor.setFillColor(col); break;
-                        case 4: playerChar.pantsColor = col; customPantsColor.setFillColor(col); break;
-                        case 5: playerChar.shoeColor = col; customShoesColor.setFillColor(col); break;
+                            case 1: playerChar.hairColor = col; customHairDisp.setColor(col); break;
+                            case 2: playerChar.skinColor = col; customFaceDisp.setColor(col); break;
+                            case 3: playerChar.topColor = col; customShirtColor.setFillColor(col); break;
+                            case 4: playerChar.pantsColor = col; customPantsColor.setFillColor(col); break;
+                            case 5: playerChar.shoeColor = col; customShoesColor.setFillColor(col); break;
                         }
 
                         playerSP.changeLook(playerChar);
@@ -501,7 +535,17 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
 
                     if (customHairColor.isMouseOver(mousePos)) {
                         activeColorMode = 1;
-                        clothesColorSelect.setup(hairPalette, 4);
+
+                        std::vector<sf::Color> mixedPalette;
+                        for (const auto& color : hairPalette) {
+                            mixedPalette.push_back(color);
+                        }
+                        int clothesSize = sizeof(clothesPalette) / sizeof(clothesPalette[0]);
+
+                        for (int i = 16; i < clothesSize; ++i) {
+                            mixedPalette.push_back(clothesPalette[i]);
+                        }
+                        clothesColorSelect.setup(mixedPalette.data(), mixedPalette.size());
                     }
 
                     else if (customSkinColor.isMouseOver(mousePos)) {
@@ -584,7 +628,7 @@ void logic(GameState &currentState, GameStart &game,
     // ESC: reset do menu
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Escape)) {
         if (currentState == GameState::Game) {
-            logicalBackground.setTexture(&mainMenuBG);
+            logicalBackground.setTexture(&menuBG);
             currentState = GameState::Menu;
             resetRound();
         }
@@ -672,7 +716,7 @@ void logic(GameState &currentState, GameStart &game,
 
 
             if (!game.graczWraca) {
-                playerSP.flip();
+                playerSP.flip(1);
                 game.graczWraca = true;
                 game.gracz_podniosl = true;
                 //can.rotate();
@@ -802,10 +846,10 @@ void rzutBot(middleCanSprite&can, canSprite &ball2, float gravity, GameStart &ga
 
     std::clock_t delay = std::clock() - start_bot_delay;
     if (delay > 1000 - std::max(game.round*50, 600)) {
-        std::cout << random_x << ' ' << random_y << std::endl;
+        //std::cout << random_x << ' ' << random_y << std::endl;
 
         game.velocity = sf::Vector2f(random_x, -(margin + random_y));
-        std::cout << "margin" << margin << std::endl;
+    /*    std::cout << "margin" << margin << std::endl;*/
         game.initialVelocity = game.velocity;
         game.hasHit = false;
 
@@ -879,7 +923,7 @@ void drinkCounter(GameStart& game, fillPiwa& visBar)
     if (game.myDrink >= DRINK_MAX) return;
 
     game.myDrink++;
-    visBar.setValue(game.myDrink - 5);
+    visBar.setValue(game.myDrink);
 }
 void drinkCounterEnemy(GameStart& game, fillPiwa& visEnemyBar)
 {
@@ -887,7 +931,7 @@ void drinkCounterEnemy(GameStart& game, fillPiwa& visEnemyBar)
     if (game.enemyDrink >= DRINK_MAX) return;
 
     game.enemyDrink++;
-    visEnemyBar.setValue(game.enemyDrink -5);
+    visEnemyBar.setValue(game.enemyDrink);
 }
 
 void groundReset(canSprite &ball, GameStart &game, float ball_x)
@@ -912,6 +956,7 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
 {
     if (currentState == GameState::Menu)
     {
+        window.draw(logo);
         playButton.draw(window);
         customButton.draw(window);
         exitButton.draw(window);
@@ -919,34 +964,55 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
     else if (currentState == GameState::CustomizeMenu) {
         playerSP.setPos(170.f, 300.f);
         if (playerSP.facing == -1) {
-            playerSP.flip();
+            playerSP.flip(1);
         }
-        window.draw(mirror);
-        window.draw(chooseBGS);
-        window.draw(customClothesBG);
-        window.draw(customShirtColor);
-        window.draw(customPantsColor);
-        window.draw(customShoesColor);
-        customShirtColorButt.draw(window);
-        customPantsColorButt.draw(window);
-        customShoesColorButt.draw(window);
-        customHatDisp.draw(window);
-        customHairDisp.draw(window);
-        playerSP.draw(window);
-        customFaceDisp.draw(window);
-        customHairRight.draw(window);
-        customHairLeft.draw(window);
-        customHatRight.draw(window);
-        customHatLeft.draw(window);
-        customFaceRight.draw(window);
-        customFaceLeft.draw(window);
-        diceLook.draw(window);
-        customHairColor.draw(window);
-        customSkinColor.draw(window);
         if (activeColorMode != 0) {
+            window.draw(colorSelectBG);
+            sf::Color bgColor;
+            switch (activeColorMode) {
+                case 1: 
+                    bgColor = playerChar.hairColor;
+                    break;
+                case 2:
+                    bgColor = playerChar.skinColor;
+                    break;
+                case 3:
+                    bgColor = playerChar.topColor;
+                    break;
+                case 4:
+                    bgColor = playerChar.pantsColor;
+                    break;
+                case 5:
+                    bgColor = playerChar.shoeColor;
+                    break;
+            }
+            colorSelectBG.setFillColor(bgColor);
             clothesColorSelect.draw(window);
         }
-
+        else {
+            window.draw(mirror);
+            window.draw(chooseBGS);
+            window.draw(customClothesBG);
+            window.draw(customShirtColor);
+            window.draw(customPantsColor);
+            window.draw(customShoesColor);
+            customShirtColorButt.draw(window);
+            customPantsColorButt.draw(window);
+            customShoesColorButt.draw(window);
+            customHatDisp.draw(window);
+            customHairDisp.draw(window);
+            playerSP.draw(window);
+            customFaceDisp.draw(window);
+            customHairRight.draw(window);
+            customHairLeft.draw(window);
+            customHatRight.draw(window);
+            customHatLeft.draw(window);
+            customFaceRight.draw(window);
+            customFaceLeft.draw(window);
+            diceLook.draw(window);
+            customHairColor.draw(window);
+            customSkinColor.draw(window);
+        }
     }
     else if (currentState == GameState::Game)
     {

@@ -47,3 +47,4 @@ x86/
 
 build/*
 !build/gpp_build.sh
+/projektpi1/save.txt

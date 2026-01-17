@@ -6,6 +6,8 @@
 #include <sstream>
 #include <iomanip>
 #include <random>
+#include <algorithm>
+#include <fstream>
 
 // tu wszystkie funkcje i klasy
 
@@ -40,14 +42,17 @@ inline sf::Color clothesPalette[] = {
 };
 
 inline sf::Color hairPalette[] = {
-    sf::Color(255, 255, 255)
+    sf::Color(113, 69, 30),
+    sf::Color(223, 196, 98),
+    sf::Color(194, 93, 31),
+    sf::Color(54, 31, 17) 
 };
 
 inline sf::Color skinPalette[] = {
-    sf::Color(90,68,18),
-    sf::Color(225,212,148),
-    sf::Color(224,203,184),
-    sf::Color(255, 255, 255)
+    sf::Color(231,190,128),
+    sf::Color(231, 178, 128),
+    sf::Color(178,112,50),
+    sf::Color(101,53,6)
 };
 
 struct spritePalette {
@@ -61,6 +66,16 @@ inline spritePalette mainPalette = {
     hairPalette,
     skinPalette
 };
+
+
+// hair, hat, face
+inline std::string paths[] = {
+    "assets/img/sprites/hair/",
+    "assets/img/sprites/hat/",
+    "assets/img/sprites/face/"
+};
+
+
 
 // charlook(int hatID, int hairID, int faceID, sfcolor topColor, sfcolor pantsColor, sfcolor shoeColor, sfcolor hairColor, sfcolor skinColor)
 struct charLook {
@@ -260,7 +275,6 @@ public:
     }
 
     // -1 - facing left, 1 - facing right
-
     int facing = 1;
 
     void draw(sf::RenderWindow& window) {
@@ -371,7 +385,7 @@ private:
     bool loadAndSetup(Part& p, const std::string& path) {
         if (p.tex.loadFromFile(path)) {
             p.part.setTexture(&p.tex);
-            std::cout << path << std::endl;
+            //std::cout << path << std::endl;
             return true;
         }
 
@@ -385,31 +399,158 @@ private:
     }
 };
 
+// id: 0 - hair, 1 - hat, 2 - face
+class chooseDisp {
+public:
+    int partID;
+    sf::Color skinColor;
+    sf::Color hairColor;
+    chooseDisp(
+        const sf::Vector2f& pos,
+        const int ID,
+        const int pID,
+        const sf::Color = sf::Color::White
+    ) : part({ 157.f, 354.f }), partID{pID} {
+        switch (ID)
+        {
+        case 0:
+            partType = "hair";
+            path = paths[ID];
+            maxPID = 10;
+            break;
+        case 1:
+            partType = "hat";
+            path = paths[ID];
+            maxPID = 3;
+            break;
+        case 2:
+            partType = "face";
+            path = paths[ID];
+            maxPID = 4;
+            addFace = true;
+            faceText.loadFromFile("assets/img/sprites/head.png");
+            face.setPosition(pos);
+            face.setSize({ 157.f, 354.f });
+            face.setTexture(&faceText);
+            face.setScale({ 2.f, 2.f });
+            break;
+        default:
+            break;
+        }
+        part.setPosition(pos);
+        if (partID) {
+            textPath << path << partType << "1.png";
+            //std::cout << textPath.str() << std::endl;
+            text.loadFromFile(textPath.str());
+            part.setTexture(&text);
+        }
+        part.setScale({2.f, 2.f});
+    };
+    void draw(sf::RenderWindow& window) {
+        if (addFace) {
+            window.draw(face);
+        }
+        if (partID) window.draw(part);
+    };
+    void setPos(sf::Vector2f pos) {
+        part.setPosition(pos);
+    };
+    void setPartID(int pIDl = -1) {
+        if (pIDl != -1) {
+            partID = pIDl;
+        }
+        if (partID != 0) {
+            textPath.str(std::string());
+            textPath << path << partType << partID << ".png";
+            text.loadFromFile(textPath.str());
+            part.setTexture(&text);
+        }
+    };
+    void pIDstep(int dir) {
+        dir = std::clamp(dir, -1, 1);
+        if (partID + dir > maxPID) partID = 0;
+        else if (partID + dir < 0) partID = maxPID;
+        else partID = partID + dir;
+        setPartID();
+    }
+    void setColor(sf::Color color) {
+        if (addFace) {
+            skinColor = color;
+            face.setFillColor(color);
+        }
+        else if (partType == "hair") {
+            hairColor = color;
+            part.setFillColor(color);
+        }
+    }
+
+private:
+    sf::RectangleShape part;
+    sf::Texture text;
+    std::stringstream textPath;
+    std::string path;
+    std::string partType;
+    bool addFace;
+    sf::RectangleShape face;
+    sf::Texture faceText;
+    int maxPID;
+};
+
+//size, pos, color, hovColor, text, font, charSize, texture
 class Button {
 public:
     Button(const sf::Vector2f& size, 
         const sf::Vector2f& position, 
         const sf::Color& color, 
         const sf::Color& hoverColor, 
-        const std::string& textString, 
-        const sf::Font& font, 
-        unsigned int charSize, 
-        const std::string& texture = "")
-        : shape(size), text(font, textString, charSize), baseColor(color), hoverColor(hoverColor) {
+        const std::string& texture,
+        const std::string& textString = "",
+        const std::string& font = "",
+        unsigned int charSize = 0)
+        : shape(size), baseColor(color), text(fontF, textString, charSize), hoverColor(hoverColor), textureStr(texture){
+
+        if (!textString.empty()) {
+            if (fontF.openFromFile(font)) {
+                text.setString(textString);
+                text.setCharacterSize(charSize);
+                text.setFont(fontF);
+                hasText = true;
+            }
+        }
 
         shape.setPosition(position);
-        if (!texture.empty() && b_texture.loadFromFile(texture)) {
+        if (!textureStr.empty() && b_texture.loadFromFile(textureStr)) {
             shape.setTexture(&b_texture);
             shape.setFillColor(color);
         }
-        else {
-            shape.setFillColor(color);
-        }
-        text.setPosition(sf::Vector2f(position.x + size.x / 2.0f - text.getLocalBounds().size.x / 2.0f, position.y + size.y / 2.0f - text.getLocalBounds().size.y / 2.0f - 5.0f));
+        if (hasText) text.setPosition(sf::Vector2f(position.x + size.x / 2.0f - text.getLocalBounds().size.x / 2.0f, position.y + size.y / 2.0f - text.getLocalBounds().size.y / 2.0f - 7.0f));
     }
+
+    Button(const Button& other)
+        : shape(other.shape),
+        baseColor(other.baseColor),
+        hoverColor(other.hoverColor),
+        textureStr(other.textureStr),
+        b_texture(other.b_texture), 
+        fontF(other.fontF),         
+        text(other.text),
+        hasText(other.hasText)
+    {
+        if (!textureStr.empty()) {
+            shape.setTexture(&b_texture);
+        }
+        if (hasText) {
+            text.setFont(fontF);
+        }
+    }
+
+    sf::Color getColor() const {
+        return baseColor;
+    }
+
     void draw(sf::RenderWindow& window) {
         window.draw(shape);
-        window.draw(text);
+        if (hasText) window.draw(text);
     }
     bool isMouseOver(const sf::Vector2f& mousePos) {
         return shape.getGlobalBounds().contains(mousePos);
@@ -421,11 +562,14 @@ public:
         shape.setFillColor(baseColor);
     }
 private:
+    std::string textureStr;
     sf::RectangleShape shape;
     sf::Text text;
+    sf::Font fontF;
     sf::Texture b_texture;
     sf::Color baseColor;
     sf::Color hoverColor;
+    bool hasText{false};
 };
 
 inline charLook randomChar() {
@@ -450,7 +594,7 @@ inline charLook randomChar() {
     sf::Color shoesColor = mainPalette.clothes[clothesInt(gen)];
 
     int hairColorInt = clothesInt(gen);
-    std::cout << "randHairColor: " << hairColorInt << std::endl;
+    //std::cout << "randHairColor: " << hairColorInt << std::endl;
     // tutaj jezeli wylosowalo clothesColor wiekszy niz 15. to daje go, ale jezeli kolor jest za ciemny czy za jasny (posegrowane w arrayu) to daje normalny ludzki kolor. wylosowanie jakiegokolwiek dziwnego koloru ma szanse 1/3, jakikolwiek normalny - 2/3 (w teorii.........)
     sf::Color hairColor = (hairColorInt >= 15 ? mainPalette.clothes[hairColorInt] : mainPalette.hair[hairInt(gen)]);
 
@@ -458,16 +602,66 @@ inline charLook randomChar() {
 
     charLook charCharacter = { hat, hair, face, shirtColor, pantsColor, shoesColor, hairColor, skinColor};
 
-    std::cout << "hatID: " << hat << std::endl << 
-        " hairID: " << hair << std::endl << 
-        " faceID: " << face << std::endl << 
-        " shirtColor: " << (int)shirtColor.r << " " << (int)shirtColor.g << " " << (int)shirtColor.b << std::endl <<
-        " pantsColor: " << (int)pantsColor.r << " " << (int)pantsColor.g << " " << (int)pantsColor.b << std::endl <<
-        " shoesColor " << (int)shoesColor.r << " " << (int)shoesColor.g << " " << (int)shoesColor.b << std::endl <<
-        " hairColor: " << (int)hairColor.r << " " << (int)hairColor.g << " " << (int)hairColor.b << std::endl <<
-        " skinColor: " << (int)skinColor.r << " " << (int)skinColor.g << " " << (int)skinColor.b << std::endl; 
+    //std::cout << "hatID: " << hat << std::endl << 
+    //    " hairID: " << hair << std::endl << 
+    //    " faceID: " << face << std::endl << 
+    //    " shirtColor: " << (int)shirtColor.r << " " << (int)shirtColor.g << " " << (int)shirtColor.b << std::endl <<
+    //    " pantsColor: " << (int)pantsColor.r << " " << (int)pantsColor.g << " " << (int)pantsColor.b << std::endl <<
+    //    " shoesColor " << (int)shoesColor.r << " " << (int)shoesColor.g << " " << (int)shoesColor.b << std::endl <<
+    //    " hairColor: " << (int)hairColor.r << " " << (int)hairColor.g << " " << (int)hairColor.b << std::endl <<
+    //    " skinColor: " << (int)skinColor.r << " " << (int)skinColor.g << " " << (int)skinColor.b << std::endl; 
     return charCharacter;
 }
+
+class colorSelectScreen {
+public:
+    colorSelectScreen() {}
+
+    colorSelectScreen(sf::Color colArr[], int partID = 0, int colorCount = 0) {
+        setup(colArr, colorCount);
+    }
+
+    void setup(sf::Color colArr[], int colorCount) {
+        buttonArr.clear();
+        float startX = 74.f;
+        float startY = 187.f;
+
+        for (int i = 0; i < colorCount; ++i) {
+            buttonArr.push_back(Button(
+                sf::Vector2f(72.f, 67.f),
+                sf::Vector2f(startX + (i % 8) * 83.f, startY + (i / 8) * 75.f),
+                colArr[i],
+                sf::Color(colArr[i].r + 20, colArr[i].g + 20, colArr[i].b + 20),
+                "assets/img/colorSelectBlank.png"
+            ));
+        }
+    }
+
+    void draw(sf::RenderWindow& wind) {
+        for (Button& button : buttonArr) {
+            button.draw(wind);
+        }
+    }
+
+    void update(sf::Vector2f mousePos) {
+        for (Button& button : buttonArr) {
+            if (button.isMouseOver(mousePos)) button.hover();
+            else button.unhover();
+        }
+    }
+
+    std::optional<sf::Color> getClickedColor(sf::Vector2f mousePos) {
+        for (Button& button : buttonArr) {
+            if (button.isMouseOver(mousePos)) {
+                return button.getColor();
+            }
+        }
+        return std::nullopt;
+    }
+
+private:
+    std::vector <Button> buttonArr;
+};
 
 class fillPiwa : public sf::Drawable, public sf::Transformable {
 private:
@@ -538,3 +732,48 @@ public:
         frame.setOrigin({0.f, static_cast<float>(size.y)});
     }
 };
+
+inline void saveCharacterToFile(const charLook& character) {
+    std::ofstream file("save.txt");
+    if (file.is_open()) {
+        file << character.hatID << " "
+            << character.hairID << " "
+            << character.faceID << "\n";
+
+        auto saveColor = [&](sf::Color c) {
+            file << (int)c.r << " " << (int)c.g << " " << (int)c.b << "\n";
+            };
+        saveColor(character.topColor);
+        saveColor(character.pantsColor);
+        saveColor(character.shoeColor);
+        saveColor(character.hairColor);
+        saveColor(character.skinColor);
+
+        file.close();
+    }
+}
+
+inline charLook loadCharacterFromFile() {
+    std::ifstream file("save.txt");
+    if (!file.is_open()) {
+        return randomChar();
+    }
+
+    charLook loaded;
+    int r, g, b;
+
+    file >> loaded.hatID >> loaded.hairID >> loaded.faceID;
+
+    auto loadColor = [&]() -> sf::Color {
+        file >> r >> g >> b;
+        return sf::Color(r, g, b);
+        };
+    loaded.topColor = loadColor();
+    loaded.pantsColor = loadColor();
+    loaded.shoeColor = loadColor();
+    loaded.hairColor = loadColor();
+    loaded.skinColor = loadColor();
+
+    file.close();
+    return loaded;
+}

@@ -34,12 +34,12 @@ sf::RectangleShape logicalBackground(mainWin);
 sf::Font font;
 sf::RectangleShape mirror;
 sf::RectangleShape chooseBGS;
-std::string fontS = "assets/fonts/DejaVuSans.ttf";
+std::string fontS = "assets/fonts/KiwiSoda.ttf";
 
 sf::RectangleShape logo({645, 239});
-Button playButton({ 228.f, 95.f }, { 273.f, 250.f }, sf::Color(96, 178, 37), sf::Color(109, 204, 42), buttText, "START", fontS, 26);
-Button customButton({ 228.f, 95.f }, { 273.f, 360.f }, sf::Color(100, 100, 100), sf::Color(150, 150, 150), buttText, "CUSTOM", fontS, 26);
-Button exitButton({ 228.f, 95.f }, { 273.f, 470.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), buttText, "WYJSCIE", fontS, 26);
+Button playButton({ 228.f, 95.f }, { 273.f, 250.f }, sf::Color(96, 178, 37), sf::Color(109, 204, 42), buttText, "START", fontS, 32);
+Button customButton({ 228.f, 95.f }, { 273.f, 360.f }, sf::Color(186, 175, 15), sf::Color(237, 224, 33), buttText, "POSTAC", fontS, 32);
+Button exitButton({ 228.f, 95.f }, { 273.f, 470.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), buttText, "WYJSCIE", fontS, 32);
 
 sf::Vector2f enemyBasePos = sf::Vector2f({ 50.0, 215.0 });
 sf::Vector2f playerBasePos = sf::Vector2f({ 750.0, 215.0 });
@@ -56,20 +56,20 @@ std::string arrL = "assets/img/arrLeft.png";
 std::string colSelPath = "assets/img/colorSelect.png";
 std::string colSelBPath = "assets/img/colorSelectBlank.png";
 
-Button customHairRight({ 45.f, 39.f }, {722.f, 154.f}, sf::Color(230, 230, 230), sf::Color::White, arrR, "", fontS, 0);
-Button customHairLeft({ 46.f, 40.f }, {480.f, 151.f}, sf::Color(230, 230, 230), sf::Color::White, arrL, "", fontS, 0);
-Button customHairColor({72.f, 67.f}, {686, 207}, sf::Color(200, 200, 200), sf::Color::White, colSelPath, "", fontS, 0);
+Button customHairRight({ 45.f, 39.f }, {722.f, 154.f}, sf::Color(230, 230, 230), sf::Color::White, arrR);
+Button customHairLeft({ 46.f, 40.f }, {480.f, 151.f}, sf::Color(230, 230, 230), sf::Color::White, arrL);
+Button customHairColor({72.f, 67.f}, {686, 207}, sf::Color(200, 200, 200), sf::Color::White, colSelPath);
 
-Button customHatRight({ 45.f, 39.f }, {540.f, 60.f}, sf::Color(230, 230, 230), sf::Color::White, arrR, "", fontS, 0);
-Button customHatLeft({ 46.f, 40.f }, {298.f, 57.f}, sf::Color(230, 230, 230), sf::Color::White, arrL, "", fontS, 0);
+Button customHatRight({ 45.f, 39.f }, {540.f, 60.f}, sf::Color(230, 230, 230), sf::Color::White, arrR);
+Button customHatLeft({ 46.f, 40.f }, {298.f, 57.f}, sf::Color(230, 230, 230), sf::Color::White, arrL);
 
-Button customFaceRight({ 45.f, 39.f }, {544.f, 277.f}, sf::Color(230, 230, 230), sf::Color::White, arrR, "", fontS, 0);
-Button customFaceLeft({ 46.f, 40.f }, {302.f, 274.f}, sf::Color(230, 230, 230), sf::Color::White, arrL, "", fontS, 0);
-Button customSkinColor({ 72.f, 67.f }, { 510, 330 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath, "", fontS, 0);
+Button customFaceRight({ 45.f, 39.f }, {544.f, 277.f}, sf::Color(230, 230, 230), sf::Color::White, arrR);
+Button customFaceLeft({ 46.f, 40.f }, {302.f, 274.f}, sf::Color(230, 230, 230), sf::Color::White, arrL);
+Button customSkinColor({ 72.f, 67.f }, { 510, 330 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath);
 
-Button customShirtColorButt({ 72.f, 67.f }, { 646, 496 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath, "", fontS, 0);
-Button customPantsColorButt({ 72.f, 67.f }, { 470, 496 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath, "", fontS, 0);
-Button customShoesColorButt({ 72.f, 67.f }, { 282, 496 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath, "", fontS, 0);
+Button customShirtColorButt({ 72.f, 67.f }, { 646, 496 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath);
+Button customPantsColorButt({ 72.f, 67.f }, { 470, 496 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath);
+Button customShoesColorButt({ 72.f, 67.f }, { 282, 496 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath);
 
 sf::RectangleShape customClothesBG({474, 122});
 sf::RectangleShape customShoesColor({150, 52});
@@ -79,7 +79,7 @@ sf::RectangleShape customShirtColor({ 106, 86 });
 sf::RectangleShape colorSelectBG({799, 422});
 colorSelectScreen clothesColorSelect(clothesPalette, 0, 24);
 
-Button diceLook({ 57.f, 49.f }, { 148, 41 }, sf::Color(230, 230, 230), sf::Color::White, "assets/img/dice.png", "", fontS, 0);
+Button diceLook({ 57.f, 49.f }, { 148, 41 }, sf::Color(230, 230, 230), sf::Color::White, "assets/img/dice.png");
 
 
 
@@ -220,7 +220,9 @@ int main()
     
     // fonty
     sf::Font font;
-    if (!font.openFromFile("assets/fonts/DejaVuSans.ttf")) return -1;
+
+    if (!font.openFromFile("assets/fonts/KiwiSoda.ttf")) return -1;
+
     
     // dzwiek
     sf::SoundBuffer buffer;

@@ -315,14 +315,14 @@ int main()
 
     // piwo gracza
     ramkaPiwa drinkBar(barOutlineTex);
-    drinkBar.setPosition({690, 220});
+    drinkBar.setPosition({684, 220});
     
     fillPiwa visBar(barFillTex, 75);
     visBar.setPosition({690, 220});
 
     // piwo enemy
     ramkaPiwa enemyBar(barOutlineTex);
-    enemyBar.setPosition({10, 220});
+    enemyBar.setPosition({4, 220});
 
     fillPiwa visEnemyBar(barFillTex, 30);
     visEnemyBar.setPosition({10, 220});

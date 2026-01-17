@@ -330,7 +330,7 @@ int main()
     int level = 1;
     //char levelChar = '1';
     sf::Text levelDisplay(font, std::to_string(level));
-    levelDisplay.setCharacterSize(15);
+    levelDisplay.setCharacterSize(0);
     levelDisplay.setStyle(sf::Text::Bold);
     levelDisplay.setFillColor(sf::Color::Red);
     levelDisplay.setPosition({ 300, 110 });
@@ -690,15 +690,16 @@ void logic(GameState &currentState, GameStart &game,
 
     // ===== 3 RUCH PO TRAFIENIU =====
     // podniesienie puszki:
-    bool B_jest_wcisniety   = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::B);
+    if (fabs(game.graczX - can.getPosition().x) < 150) {
+        bool B_jest_wcisniety = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::B);
         bool B_zostal_nacisniety = B_jest_wcisniety && !game.B_byl_wcisniety;
-        game.B_byl_wcisniety    = B_jest_wcisniety;
-       
+        game.B_byl_wcisniety = B_jest_wcisniety;
+
         if (B_zostal_nacisniety) {
-            game.gracz_podniosl = true; 
+            game.gracz_podniosl = true;
             can.standUp();
         }
-
+    }
 
     // gracz bieg
     if (game.graczBiegnie && spacePressed)
@@ -738,7 +739,15 @@ void logic(GameState &currentState, GameStart &game,
         const float dir     = (targetX > game.botX) ? 1.f : -1.f;
 
         const float v = BOT_SPEED_BASE * game.botRunSpeed;
-        game.botX += dir * v * dt * 2;
+        if (game.round < 7) {
+            game.botX += dir * v * dt * ((game.round / 10.f) + 1.2);
+            std::cout << (game.round / 10.f) + 1.2 << std::endl;
+        }
+        else {
+            game.botX += dir * v * dt * 2;
+        }
+        
+
 
         const bool reached =
             (dir > 0.f && game.botX >= targetX) ||
@@ -813,16 +822,21 @@ void rzutBot(middleCanSprite&can, canSprite &ball2, float gravity, GameStart &ga
         start_bot_delay = clock();
 
     std::uniform_real_distribution<> dis(185.0f, 800.0f);
+    
     float margin;
-
+    float margin_x;
     if (game.round < 7)
     {
         std::uniform_real_distribution<> dis2(-200.0f + (10 * game.round), 200.0f - (10 * game.round));
+        std::uniform_real_distribution<> dis3(-125.0f, 125.0f);
         margin = dis2(gen);
+        margin_x = dis3(gen);
     }
     else {
         std::uniform_real_distribution<> dis2(-100.0f , 100.0f );
+        std::uniform_real_distribution<> dis3(-50.0f, 50.0f);
         margin = dis2(gen);
+        margin_x = dis3(gen);
     }
 
     float random_x = dis(gen);
@@ -850,7 +864,7 @@ void rzutBot(middleCanSprite&can, canSprite &ball2, float gravity, GameStart &ga
     if (delay > 1000 - std::max(game.round*50, 600)) {
         //std::cout << random_x << ' ' << random_y << std::endl;
 
-        game.velocity = sf::Vector2f(random_x, -(margin + random_y));
+        game.velocity = sf::Vector2f(random_x + margin_x, -(margin + random_y));
     /*    std::cout << "margin" << margin << std::endl;*/
         game.initialVelocity = game.velocity;
         game.hasHit = false;
@@ -943,9 +957,19 @@ void groundReset(canSprite &ball, GameStart &game, float ball_x)
     float rand = dis3(gen);
     if (ball.getPosition().y > rand)
     {
-        game.isFlying = false;
-        game.velocity = {0.f, 0.f};
-        //ball.setPosition({ball_x, game.ball_y});
+        if (fabs(ball.getPosition().x - 400.f) > 115) {
+
+            game.isFlying = false;
+            game.velocity = { 0.f, 0.f };
+            //ball.setPosition({ ball_x, game.ball_y });
+        }
+        else {
+            game.isFlying = false;
+            game.velocity = { 0.f, 0.f };
+            ball.setPosition({ball_x, game.ball_y});
+
+        }
+        
         game.turn = !game.turn; 
     }
 

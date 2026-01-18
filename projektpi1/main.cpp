@@ -320,8 +320,9 @@ int main()
     ramkaPiwa drinkBar(barOutlineTex);
     drinkBar.setPosition({684, 220});
     
-    fillPiwa visBar(barFillTex, 75);
+    fillPiwa visBar(barFillTex, 70);
     visBar.setPosition({690, 220});
+    visBar.setValue(game.myDrink );
 
     // piwo enemy
     ramkaPiwa enemyBar(barOutlineTex);
@@ -329,6 +330,7 @@ int main()
 
     fillPiwa visEnemyBar(barFillTex, 30);
     visEnemyBar.setPosition({10, 220});
+    visEnemyBar.setValue(game.enemyDrink );
 
     int level = 1;
     //char levelChar = '1';
@@ -706,7 +708,9 @@ void logic(GameState &currentState, GameStart &game,
         visBar.addOffset(); // naprawia bug związany z polozeniem fillu przy restarcie
         visEnemyBar.addOffset();
         visBar.setPosition({690, 220}); // restart poziomu piwa
+        visBar.setValue(game.myDrink);
         visEnemyBar.setPosition({10, 220}); // przy escape
+        visBar.setValue(game.enemyDrink);
         visBar.setValue(0);
         visEnemyBar.setValue(0);
         ball.setPosition({game.ball_x, game.ball_y});
@@ -831,7 +835,7 @@ void logic(GameState &currentState, GameStart &game,
         const float dir     = (targetX > game.botX) ? 1.f : -1.f;
 
         const float v = BOT_SPEED_BASE * game.botRunSpeed;
-        if (game.round < 7) {
+        if (game.round < 9) {
             game.botX += dir * v * dt * ((game.round / 10.f) + 1.2);
             //std::cout << (game.round / 10.f) + 1.2 << std::endl;
         }
@@ -890,7 +894,7 @@ void logic(GameState &currentState, GameStart &game,
         //Jak bot wygra powinien byc koniec gry
         resetRound();
     }
-    else if (game.myDrink >= 75) {
+    else if (game.myDrink >= 62) {
         game.scorePlayer++;
         game.round++;
         enemySP.changeLook(randomChar());
@@ -1023,11 +1027,11 @@ void bounce(canSprite &ball, middleCanSprite&can, GameStart &game, sf::Sound &so
 
 void drinkCounter(GameStart& game, fillPiwa& visBar)
 {
-    constexpr int DRINK_MAX = 75;
+    constexpr int DRINK_MAX = 62;
     if (game.myDrink >= DRINK_MAX) return;
 
     game.myDrink++;
-    visBar.setValue(game.myDrink - 5);
+    visBar.setValue(game.myDrink);
 }
 void drinkCounterEnemy(GameStart& game, fillPiwa& visEnemyBar)
 {
@@ -1035,7 +1039,7 @@ void drinkCounterEnemy(GameStart& game, fillPiwa& visEnemyBar)
     if (game.enemyDrink >= DRINK_MAX) return;
 
     game.enemyDrink++;
-    visEnemyBar.setValue(game.enemyDrink - 5);
+    visEnemyBar.setValue(game.enemyDrink);
 }
 
 void groundReset(canSprite &ball, GameStart &game, float ball_x)

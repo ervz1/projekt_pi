@@ -88,8 +88,7 @@ colorSelectScreen clothesColorSelect(clothesPalette, 0, 24);
 
 Button diceLook({ 57.f, 49.f }, { 148, 530 }, sf::Color(230, 230, 230), sf::Color::White, "assets/img/dice.png");
 
-
-
+float musicVolume = 40.f;
 
 std::random_device rd;
 std::mt19937 gen(rd());
@@ -152,15 +151,16 @@ struct GameStart {
     bool spaceHeld = false; 
     int scorePlayer = 0;
     int scoreBot = 0;
-    int round = 1;          // zamiast level jak wolisz
+    int round = 1;          
 
     bool graczFacingRight = true;
 
     bool scoreSaved = false;
 };
+    bool fadingOut = false;
 
 void logic(GameState &currentState, GameStart &game, canSprite &ball, middleCanSprite &can, float ramp_up, canSprite &ball2, float gravity,
-    float dt, sf::Sound &sound, fillPiwa &visBar, int &level, sf::Text &levelDisplay, fillPiwa& visEnemyBar);
+    float sdt, sf::Sound &sound, fillPiwa &visBar, int &level, sf::Text &levelDisplay, fillPiwa& visEnemyBar);
 
 void odbicie(canSprite &ball, float pozycja_x, GameStart &game, float dt, middleCanSprite&can, sf::Sound &sound);
 
@@ -185,7 +185,7 @@ void eventLoop(const std::optional<sf::Event> &event, sf::RenderWindow &window, 
 void drinkCounter(GameStart& game, fillPiwa &visBar);
 
 void drinkCounterEnemy(GameStart& game, fillPiwa &visEnemyBar);
-
+sf::Music music;
 int main()
 {   
 
@@ -248,6 +248,17 @@ int main()
     sf::SoundBuffer buffer;
     if (!buffer.loadFromFile("assets/music/clank.mp3")) return -1;
     
+    if (!music.openFromFile("assets/music/music.mp3")) return -1;
+    
+    music.setLooping(true);   
+    music.setVolume(musicVolume);
+    music.play();
+
+    playerSP.flip(-1), game.graczFacingRight = false;
+    logo.setTexture(&logoText);
+    logo.setOrigin(logo.getGeometricCenter());
+    logo.setPosition(logo.getGeometricCenter() + sf::Vector2f(87.f, 17.f));
+
     // Przyciski 
     sf::Clock keyTimer;
     // Button playButton({ 254.f, 104.f }, { 273.f, 260.f }, sf::Color(96, 178, 37), sf::Color(109, 204, 42), "START", font, 30, buttText);
@@ -452,6 +463,13 @@ while (window.isOpen())
                  enemyBar, visEnemyBar,
                  scoreText, roundText, loggedUser, mousePos);
     }
+
+    if (fadingOut)
+    {
+        musicVolume -= (3.f * dt); 
+        music.setVolume(musicVolume);
+    }
+    if (musicVolume <= 0) {fadingOut = false;music.stop();}
 
     window.display();
 }
@@ -1167,9 +1185,12 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
 
         drawBars(game, ball, window);
         if (showInfo) window.draw(infoRect);
+
     } else if(currentState == GameState::GameOver){
 
-        if (!game.scoreSaved) {
+        fadingOut = true;
+
+        if (!game.scoreSaved) { 
             std::ofstream file("score.txt", std::ios::app);
             file << loggedUser << ":" << game.scorePlayer << "\n";
             //loggedUser
@@ -1195,9 +1216,7 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
         
         //playButton.draw(window);
         exitButton.draw(window);
-        
-        
-        
+    
     }
 
 }

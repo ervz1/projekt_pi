@@ -18,7 +18,7 @@ int activeColorMode = 0;
 sf::Vector2f mainWin = { 800.0f, 600.0f };
 void updateViewViewport(const sf::RenderWindow&, sf::View&);
 
-enum class GameState { Menu, Game, GameMenu, CustomizeMenu, LoginScreen};
+enum class GameState { Menu, Game, GameMenu, CustomizeMenu, LoginScreen, GameOver};
 
 std::string buttText = "assets/img/button.png";
 sf::Texture logoText("assets/img/logo.png");
@@ -212,6 +212,9 @@ int main()
     sf::Font font;
     if (!font.openFromFile("assets/fonts/KiwiSoda.ttf")) return -1;
 
+    sf::Font textFont;
+    if (!textFont.openFromFile("assets/fonts/KOMIKAX_.ttf")) return -1;
+
     LoginPanelSFML login(window, font);
     std::string loggedUser;
 
@@ -289,6 +292,9 @@ int main()
     canSprite ball2({ game.bot_ball_x, game.ball_y}, sf::Color::Red);
     ball2.setPosition({ game.bot_ball_x, game.ball_y });
 
+
+    //powerBar barLeft({});
+
     sf::Sound sound(buffer);
 
     // Punkty
@@ -296,24 +302,28 @@ int main()
     scoreText.setFillColor(sf::Color::White);
     scoreText.setPosition({20.f, 20.f});
 
-    sf::Text roundText(font, "", 18);
+    sf::Text roundText(font, "", 30);
     roundText.setFillColor(sf::Color::White);
-    roundText.setPosition({20.f, 45.f});
+    roundText.setOutlineColor(sf::Color::Black);
+    roundText.setOutlineThickness(2.0f);
+    roundText.setPosition({220.f, 500.f});
     
     
-    sf::Text aim(font, "Celowanie - Strzalki(Gora/Lewo)");
+    sf::Text aim(textFont, "Celowanie - Strzalki(Gora/Lewo) \n Klikanie Spacji po trafieniu uzupelnia pasek \nJak trafi przeciwnik to klikanie spacji by biec\n A przy puszcze kliknac 'b' zeby podniesc");
     aim.setCharacterSize(15);
     aim.setStyle(sf::Text::Bold);
-    aim.setFillColor(sf::Color::Red);
-    aim.setPosition({ 400, 50});
+    aim.setFillColor(sf::Color::White);
+    aim.setOutlineColor(sf::Color::Black);
+    aim.setPosition({ 200, 50});
+    aim.setOutlineThickness(2.0f);
 
-    sf::Text drink(font, "Klikanie Spacji po trafieniu uzupelnia pasek");
+    sf::Text drink(textFont, "");
     drink.setCharacterSize(15);
     drink.setStyle(sf::Text::Bold);
     drink.setFillColor(sf::Color::Red);
     drink.setPosition({ 400, 80});
 
-    sf::Text move(font, "Jak trafi przeciwnik to ... (placeholder)");
+    sf::Text move(textFont, "");
     move.setCharacterSize(15);
     move.setStyle(sf::Text::Bold);
     move.setFillColor(sf::Color::Red);
@@ -803,7 +813,7 @@ void logic(GameState &currentState, GameStart &game,
         const float v = BOT_SPEED_BASE * game.botRunSpeed;
         if (game.round < 7) {
             game.botX += dir * v * dt * ((game.round / 10.f) + 1.2);
-            std::cout << (game.round / 10.f) + 1.2 << std::endl;
+            //std::cout << (game.round / 10.f) + 1.2 << std::endl;
         }
         else {
             game.botX += dir * v * dt * 2;
@@ -854,6 +864,7 @@ void logic(GameState &currentState, GameStart &game,
     // ===== 5 PUNKTY =====
     if (game.enemyDrink >= 30) {
         game.scoreBot++;
+        currentState = GameState::GameOver;
         // game.round++;
         
         //Jak bot wygra powinien byc koniec gry
@@ -1104,7 +1115,7 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
     }
     else if (currentState == GameState::Game)
     {
-        window.draw(scoreText);
+        //window.draw(scoreText);
         window.draw(roundText);
 
         ball.draw(window);
@@ -1115,8 +1126,7 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
         playerSP.draw(window);
 
         window.draw(aim);
-        window.draw(move);
-        window.draw(drink);
+        
 
 
         window.draw(visBar);
@@ -1132,23 +1142,17 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
 
 }
 
+PowerBar powerBar;
+
 void drawBars(GameStart &game, canSprite &ball, sf::RenderWindow &window)
 {
     if (!game.isFlying && (game.up > 0.0f || game.left > 0.0f))
     {
-        if (game.up > 0.0f)
-        {
-            sf::RectangleShape powerBar(sf::Vector2f(10.f, -game.up / 10.f));
-            powerBar.setFillColor(sf::Color::Red);
-            powerBar.setPosition(ball.getPosition());
-            window.draw(powerBar);
+        if (game.up > 0.0f) {
+            powerBar.draw(window, ball.getPosition(), -90.f, game.up / 10.f, 10.f);
         }
-        if (game.left > 0.0f)
-        {
-            sf::RectangleShape powerBar(sf::Vector2f(-game.left / 10.f, 10.f));
-            powerBar.setFillColor(sf::Color::Red);
-            powerBar.setPosition(ball.getPosition());
-            window.draw(powerBar);
+        if (game.left > 0.0f) {
+            powerBar.draw(window, ball.getPosition(), 180.f, game.left / 10.f, 10.f);
         }
     }
 }

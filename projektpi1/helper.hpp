@@ -754,6 +754,34 @@ inline void saveCharacterToFile(const charLook& character) {
     }
 }
 
+
+class PowerBar {
+public:
+    PowerBar() {
+        texture.loadFromFile("assets/img/powerbar.png");
+        bar.setTexture(&texture);
+        bar.setFillColor(sf::Color::Red);
+    }
+
+    void setRotation(float angle) {
+        bar.setRotation(sf::degrees(angle));
+        
+    }
+
+    void draw(sf::RenderWindow& window, sf::Vector2f position, float rotation, float length, float thickness) {
+        bar.setPosition(position);
+        bar.setRotation(sf::degrees(rotation));
+        bar.setSize(sf::Vector2f(length, thickness));
+        window.draw(bar);
+    }
+
+private:
+    sf::RectangleShape bar;
+    sf::Texture texture;
+};
+
+
+
 inline charLook loadCharacterFromFile() {
     std::ifstream file("save.txt");
     if (!file.is_open()) {

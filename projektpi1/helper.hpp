@@ -156,14 +156,14 @@ public:
         canNoise({ 44.f, 74.f }) {
         canTxt.loadFromFile("assets/img/cans/canbase.png");
         can.setTexture(&canTxt);
-        canBGTxt.loadFromFile("assets/img/cans/can1.png");
-        canBG.setTexture(&canBGTxt);
+        //canBGTxt.loadFromFile("assets/img/cans/n1.png");
         canNoiseTxt.loadFromFile("assets/img/cans/cannoise.png");
         canNoise.setTexture(&canNoiseTxt);
 
         can.setOrigin({ 22.f, 74.f});
         canBG.setOrigin({ 22.f, 74.f });
         canNoise.setOrigin({ 22.f, 74.f });
+        randomCan();
     }
     sf::Vector2f getPosition() {
         return can.getPosition();
@@ -202,7 +202,17 @@ public:
         canBG.setRotation(sf::degrees(0));
         canNoise.setRotation(sf::degrees(0));
     }
-
+    void randomCan() {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> rand(1, 7);
+        std::stringstream path;
+        path << "assets/img/cans/beer" << rand(gen) << ".png";
+        std::cout << path.str();
+        canBGTxt.loadFromFile(path.str());
+        canBG.setTexture(&canBGTxt);
+        //can.setTexture(&canTxt);
+    }
 
 private:
     sf::RectangleShape can;
@@ -765,7 +775,7 @@ public:
         BOTTOM_OFFSET = 0;
     };
     void removeOffset(){
-        BOTTOM_OFFSET = 8.f;
+        BOTTOM_OFFSET = 0.f;
     };
 
     fillPiwa(const sf::Texture& tex, int maxValue)

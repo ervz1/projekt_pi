@@ -42,4 +42,6 @@ $(CoreLibraryDependencies);%(AdditionalDependencies);sfml-graphics.lib;sfml-wind
 
 
 ### Na linuxie:
+Instalacja paczki SFML_Linux
+`sudo apt-get install libsfml-dev`
 Uruchomienie skryptem: gpp_build.sh

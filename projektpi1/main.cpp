@@ -10,6 +10,7 @@
 #include "helper.hpp"
 #include <cmath> 
 #include <vector>
+#include "LoginStruktura.hpp"
 
 // 1 - hair, 2 - skin, 3 - shirt, 4 - pants, 5 - shoes
 int activeColorMode = 0;
@@ -17,7 +18,7 @@ int activeColorMode = 0;
 sf::Vector2f mainWin = { 800.0f, 600.0f };
 void updateViewViewport(const sf::RenderWindow&, sf::View&);
 
-enum class GameState { Menu, Game, GameMenu, CustomizeMenu };
+enum class GameState { Menu, Game, GameMenu, CustomizeMenu, LoginScreen};
 
 std::string buttText = "assets/img/button.png";
 sf::Texture logoText("assets/img/logo.png");
@@ -205,9 +206,19 @@ int main()
     view.setCenter(sf::Vector2f(mainWin.x / 2.f, mainWin.y / 2.f));
     updateViewViewport(window, view);
     window.setView(view);
+    // menu logowania:
+        
+    // fonty
+    sf::Font font;
+    if (!font.openFromFile("assets/fonts/KiwiSoda.ttf")) return -1;
+
+    LoginPanelSFML login(window, font);
+    std::string loggedUser;
+
+    GameState currentState = GameState::LoginScreen;
 
     // stan gry (menu czy gra)
-    GameState currentState = GameState::Menu;
+    // GameState currentState = GameState::Menu;
 
     // Assety
 
@@ -217,11 +228,6 @@ int main()
 
     if (!barFillTex.loadFromFile("assets/img/bar/barfill.png")) return -1;
     if (!barOutlineTex.loadFromFile("assets/img/bar/baroutline.png")) return -1;
-    
-    // fonty
-    sf::Font font;
-
-    if (!font.openFromFile("assets/fonts/KiwiSoda.ttf")) return -1;
 
     
     // dzwiek
@@ -339,43 +345,92 @@ int main()
     float gravity = 980.f;
     sf::Clock clock;
     float totalTime = 0;
-    while (window.isOpen()) {
-        if (currentState == GameState::Game) {
-            logicalBackground.setTexture(&gameBG);
+
+
+while (window.isOpen())
+{
+    // ===== CZAS =====
+    float dt = clock.restart().asSeconds();
+    totalTime += dt;
+
+    // ===== ANIMACJE UI =====
+    float scaleX = 1.f + 0.07f * std::sin(totalTime * 2.f);
+    float scaleY = 1.f + 0.07f * std::cos(totalTime * 2.f);
+    logo.setScale({ scaleX, scaleY });
+
+    // ===== MYSZ =====
+    sf::Vector2i mousePosI = sf::Mouse::getPosition(window);
+    sf::Vector2f mousePosUI = window.mapPixelToCoords(mousePosI);
+    sf::Vector2f mousePos   = window.mapPixelToCoords(mousePosI, view);
+
+    float ramp_up = 250.f * dt * 2.f;
+
+    // ===== EVENTY =====
+    while (const std::optional event = window.pollEvent())
+    {
+        if (event->is<sf::Event::Closed>())
+            window.close();
+
+        if (currentState == GameState::LoginScreen)
+        {
+            login.handleEvent(*event);
         }
-
-        float dt = clock.restart().asSeconds();
-
-        totalTime += dt;
-        float scaleX = 1.f + 0.07 * std::sin(totalTime*2);
-        float scaleY = 1.f + 0.07 * std::cos(totalTime * 2);
-        logo.setScale({ scaleX, scaleY });
-
-        sf::Vector2i mousePosI = sf::Mouse::getPosition(window);
-        sf::Vector2f mousePosUI = window.mapPixelToCoords(mousePosI); // bez view
-
-        sf::Vector2f mousePos = window.mapPixelToCoords(mousePosI, view);
-        float ramp_up = 250.f * dt * 2;
-
-        while (const std::optional event = window.pollEvent())
-        eventLoop(event, window, view, currentState, playButton, mousePosUI, exitButton);
-            
-        logic(currentState, game, ball, can, ramp_up, ball2, gravity, dt, sound, visBar, level, levelDisplay, visEnemyBar);
-        
-        scoreText.setString("Gracz: " + std::to_string(game.scorePlayer) + "\tBot: " + std::to_string(game.scoreBot));
-        roundText.setString("Runda: " + std::to_string(game.round));
-
-        window.clear(sf::Color::Black);
-        window.setView(view);
-        window.draw(logicalBackground);
-
-        drawGame(currentState, playButton, window, exitButton, ball, can, ball2, game, aim, move, drink, drinkBar, visBar, levelDisplay, enemyBar, visEnemyBar, scoreText, roundText);
-
-        window.display();
+        else
+        {
+            eventLoop(event, window, view, currentState,
+                      playButton, mousePosUI, exitButton);
+        }
     }
+
+    // ===== LOGIKA =====
+    if (currentState == GameState::Game)
+    {
+        logicalBackground.setTexture(&gameBG);
+
+        logic(currentState, game, ball, can, ramp_up, ball2,
+              gravity, dt, sound, visBar,
+              level, levelDisplay, visEnemyBar);
+
+        scoreText.setString(
+            "Gracz: " + std::to_string(game.scorePlayer) +
+            "\tBot: " + std::to_string(game.scoreBot)
+        );
+        roundText.setString("Runda: " + std::to_string(game.round));
+    }
+    else
+    {
+        logicalBackground.setTexture(&menuBG);
+    }
+
+    // ===== RYSOWANIE (ZAWSZE) =====
+    window.clear(sf::Color::Black);
+    window.setView(view);
+    window.draw(logicalBackground);
+
+    if (currentState == GameState::LoginScreen)
+    {
+        login.draw();
+
+        if (login.skonczono())
+        {
+            loggedUser = login.UstawGracza();
+            currentState = GameState::Menu;
+        }
+    }
+    else
+    {
+        drawGame(currentState, playButton, window, exitButton,
+                 ball, can, ball2, game,
+                 aim, move, drink,
+                 drinkBar, visBar,
+                 levelDisplay,
+                 enemyBar, visEnemyBar,
+                 scoreText, roundText);
+    }
+
+    window.display();
 }
-
-
+}
 void eventLoop(const std::optional<sf::Event> &event, sf::RenderWindow &window, sf::View &view, GameState &currentState, Button &playButton, sf::Vector2f &mousePos, Button &exitButton){
 
     // 1.1 zamknięcie
@@ -390,10 +445,17 @@ void eventLoop(const std::optional<sf::Event> &event, sf::RenderWindow &window, 
         view.setCenter({mainWin.x / 2.f, mainWin.y / 2.f});
         window.setView(view);
     }
+    
+    // login panel 1.25
+    // loginPanel.handleEvent(event);
+
+    // if (loginPanel.isFinished()) {
+    //     currentState = GameState::Menu;
+    // }
 
     // 1.3 menu
     else if (currentState == GameState::Menu || currentState == GameState::CustomizeMenu )
-    {
+    {   
         handleMenu(event, playButton, mousePos, currentState, exitButton, window);
     }
 }

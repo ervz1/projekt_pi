@@ -16,8 +16,7 @@ public:
 private:
     sf::RenderWindow& window;
 
-    sf::Texture bgTexture;
-    std::optional<sf::Sprite> bgSprite;
+    sf::Texture panelTexture;
 
     LoginState state = LoginState::EnterLogin;
     bool zalogowano = false;
@@ -41,7 +40,7 @@ private:
 
 LoginPanelSFML::LoginPanelSFML(sf::RenderWindow& win, const sf::Font& font)
     :
-     window(win), bgSprite(), infoText(font, "", 40), inputText(font, "", 36),confirmButton(
+     window(win), infoText(font, "", 40), inputText(font, "", 36),confirmButton(
     {228.f, 95.f},
     {286.f, 390.f},
     sf::Color(96,178,37),
@@ -52,28 +51,30 @@ LoginPanelSFML::LoginPanelSFML(sf::RenderWindow& win, const sf::Font& font)
     40
 )
 {
-    if (bgTexture.loadFromFile(
-    "/assets/img/brickbg.png"))
-    {
-        bgSprite.emplace(bgTexture);
+    //if (bgTexture.loadFromFile(
+    //"assets/img/brickbg.png"))
+    //{
+    //    bgSprite.emplace(bgTexture);
 
-        sf::Vector2u texSize = bgTexture.getSize();
-        bgSprite->setScale(
-            {800.f / texSize.x,
-            600.f / texSize.y}
-        );
-    }
+    //    sf::Vector2u texSize = bgTexture.getSize();
+    //    bgSprite->setScale(
+    //        {800.f / texSize.x,
+    //        600.f / texSize.y}
+    //    );
+    //}
 
-    panel.setSize({700.f, 350.f});
-    panel.setFillColor(sf::Color(30,30,30,220));
-    panel.setOutlineThickness(3.f);
-    panel.setOutlineColor(sf::Color::White);
-    panel.setOrigin(panel.getSize() / 2.f);
-    panel.setPosition({400.f, 300.f});
+    panelTexture.loadFromFile("assets/img/loginbg.png");
+    panel.setSize({785.f, 497.f});
+    //panel.setFillColor(sf::Color(30,30,30,220));
+    //panel.setOutlineThickness(3.f);
+    //panel.setOutlineColor(sf::Color::White);
+    //panel.setOrigin(panel.getSize() / 2.f);
+    panel.setTexture(&panelTexture);
+    panel.setPosition({15.f, 71.f});
     infoText.setFillColor(sf::Color::White);
-    infoText.setPosition({90.f, 170.f});
+    infoText.setPosition({130.f, 170.f});
     inputText.setFillColor(sf::Color::White);
-    inputText.setPosition({90.f, 260.f});
+    inputText.setPosition({ 130.f, 260.f});
     updateTexts();
 }
 
@@ -185,8 +186,6 @@ void LoginPanelSFML::updateTexts() {
 void LoginPanelSFML::draw() {
     
     window.setView(window.getDefaultView());
-    if (bgSprite)
-    window.draw(*bgSprite);
     window.draw(panel);
     window.draw(infoText);
     window.draw(inputText);

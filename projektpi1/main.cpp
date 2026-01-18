@@ -18,7 +18,8 @@ int activeColorMode = 0;
 sf::Vector2f mainWin = { 800.0f, 600.0f };
 void updateViewViewport(const sf::RenderWindow&, sf::View&);
 
-enum class GameState { Menu, Game, GameMenu, CustomizeMenu, LoginScreen, GameOver};
+enum class GameState { Menu, Game, CustomizeMenu, LoginScreen, GameOver};
+bool showInfo = false;
 
 std::string buttText = "assets/img/button.png";
 sf::Texture logoText("assets/img/logo.png");
@@ -29,18 +30,23 @@ sf::Texture chooseBGSText;
 sf::Texture custShirtText;
 sf::Texture custPantsText;
 sf::Texture custShoesText;
+sf::Texture infoTexture("assets/img/info.png");
 sf::Texture custClothesBGText("assets/img/clothesBG.png");
 sf::Texture colorSelectBGText("assets/img/colorSelectBG.png");
 sf::RectangleShape logicalBackground(mainWin);
 sf::Font font;
 sf::RectangleShape mirror;
 sf::RectangleShape chooseBGS;
+sf::RectangleShape infoRect({800, 498});
 std::string fontS = "assets/fonts/KiwiSoda.ttf";
 
 sf::RectangleShape logo({645, 239});
 Button playButton({ 228.f, 95.f }, { 273.f, 250.f }, sf::Color(96, 178, 37), sf::Color(109, 204, 42), buttText, "START", fontS, 32);
 Button customButton({ 228.f, 95.f }, { 273.f, 360.f }, sf::Color(186, 175, 15), sf::Color(237, 224, 33), buttText, "POSTAC", fontS, 32);
 Button exitButton({ 228.f, 95.f }, { 273.f, 470.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), buttText, "WYJSCIE", fontS, 32);
+Button custBackButton({ 228.f, 95.f }, { 63.f, 6.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), buttText, "WROC", fontS, 32);
+Button colorBackButton({ 228.f, 95.f }, { 273.f, 470.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), buttText, "WROC", fontS, 32);
+Button infoButton({ 72.f, 68.f }, { 364.f, 9.f }, sf::Color(111, 207, 42), sf::Color(139, 219, 81), "assets/img/infoButt.png");
 
 sf::Vector2f enemyBasePos = sf::Vector2f({ 50.0, 215.0 });
 sf::Vector2f playerBasePos = sf::Vector2f({ 750.0, 215.0 });
@@ -80,7 +86,7 @@ sf::RectangleShape customShirtColor({ 106, 86 });
 sf::RectangleShape colorSelectBG({799, 422});
 colorSelectScreen clothesColorSelect(clothesPalette, 0, 24);
 
-Button diceLook({ 57.f, 49.f }, { 148, 41 }, sf::Color(230, 230, 230), sf::Color::White, "assets/img/dice.png");
+Button diceLook({ 57.f, 49.f }, { 148, 530 }, sf::Color(230, 230, 230), sf::Color::White, "assets/img/dice.png");
 
 
 
@@ -184,6 +190,9 @@ int main()
 {   
 
     GameStart game;
+
+    infoRect.setTexture(&infoTexture);
+    infoRect.setPosition({ 0, 69 });
     playerSP.flip(-1), game.graczFacingRight = false;
     logo.setTexture(&logoText);
     logo.setOrigin(logo.getGeometricCenter());
@@ -261,7 +270,7 @@ int main()
 
     mirror.setTexture(&mirrorText);
     mirror.setSize({275.f, 421.f});
-    mirror.setPosition({39.f, 95.f});
+    mirror.setPosition({39.f, 110.f});
     chooseBGS.setTexture(&chooseBGSText);
     chooseBGS.setSize({408.f, 360.f});
     chooseBGS.setPosition({ 328.f, 6.f });
@@ -461,6 +470,14 @@ void eventLoop(const std::optional<sf::Event> &event, sf::RenderWindow &window, 
         view.setCenter({mainWin.x / 2.f, mainWin.y / 2.f});
         window.setView(view);
     }
+    else if (currentState == GameState::Game) {
+        if (const auto* mouseEvent = event->getIf<sf::Event::MouseButtonPressed>())
+        {
+            if (infoButton.isMouseOver(mousePos)) {
+                showInfo = !showInfo;
+            }
+        }
+    }
     
     // login panel 1.25
     // loginPanel.handleEvent(event);
@@ -525,6 +542,8 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
     customPantsColorButt.isMouseOver(mousePos) ? customPantsColorButt.hover() : customPantsColorButt.unhover();
     customShoesColorButt.isMouseOver(mousePos) ? customShoesColorButt.hover() : customShoesColorButt.unhover();
 
+    custBackButton.isMouseOver(mousePos) ? custBackButton.hover() : custBackButton.unhover();
+    colorBackButton.isMouseOver(mousePos) ? colorBackButton.hover() : colorBackButton.unhover();
 
     if (activeColorMode != 0) {
         clothesColorSelect.update(mousePos);
@@ -536,7 +555,7 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
     {
         if (mouseEvent->button == sf::Mouse::Button::Left)
         {
-            if (currentState == GameState::Menu || currentState == GameState::GameOver) {
+            if (currentState == GameState::Menu) {
                 if (playButton.isMouseOver(mousePos))
                 {
                     playerSP.flip(-1);
@@ -547,10 +566,15 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
                     logicalBackground.setTexture(&menuBG);
                 } else if (exitButton.isMouseOver(mousePos)) window.close();
             }
+            if (currentState == GameState::GameOver) {
+                if (exitButton.isMouseOver(mousePos)) {
+                    currentState = GameState::Menu;
+                }
+            }
             if (currentState == GameState::CustomizeMenu) {
                 saveCharacterToFile(playerChar);
                 if (activeColorMode != 0) {
-
+                    if (colorBackButton.isMouseOver(mousePos)) activeColorMode=0;
                     std::optional<sf::Color> pickedColor = clothesColorSelect.getClickedColor(mousePos);
 
                     if (pickedColor.has_value()) {
@@ -568,6 +592,9 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
                     }
                 }
                 else {
+                    if (custBackButton.isMouseOver(mousePos)) {
+                        currentState = GameState::Menu;
+                    }
                     if (diceLook.isMouseOver(mousePos)) {
                         playerChar = randomChar();
                         customHairDisp.setPartID(playerChar.hairID);
@@ -1071,7 +1098,7 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
         game.scoreSaved = false;
     }
     else if (currentState == GameState::CustomizeMenu) {
-        playerSP.setPos(170.f, 300.f);
+        playerSP.setPos(170.f, 315.f);
         if (playerSP.facing == -1) {
             playerSP.flip(1);
         }
@@ -1097,6 +1124,7 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
             }
             colorSelectBG.setFillColor(bgColor);
             clothesColorSelect.draw(window);
+            colorBackButton.draw(window);
         }
         else {
             window.draw(mirror);
@@ -1121,13 +1149,13 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
             diceLook.draw(window);
             customHairColor.draw(window);
             customSkinColor.draw(window);
+            custBackButton.draw(window);
         }
     }
     else if (currentState == GameState::Game)
     {
-        //window.draw(scoreText);
-        window.draw(roundText);
-        window.draw(scoreText);
+        infoButton.isMouseOver(mousePos) ? infoButton.hover() : infoButton.unhover();
+        infoButton.draw(window);
 
         ball.draw(window);
         can.draw(window);
@@ -1136,19 +1164,15 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
         enemySP.draw(window);
         playerSP.draw(window);
 
-        window.draw(aim);
-        
-
-
         window.draw(visBar);
         window.draw(visEnemyBar);
 
         window.draw(drinkBar);
         window.draw(enemyBar);
 
-        window.draw(levelDisplay);
 
         drawBars(game, ball, window);
+        if (showInfo) window.draw(infoRect);
     } else if(currentState == GameState::GameOver){
 
         if (!game.scoreSaved) {
@@ -1194,10 +1218,10 @@ void drawBars(GameStart &game, canSprite &ball, sf::RenderWindow &window)
     if (!game.isFlying && (game.up > 0.0f || game.left > 0.0f))
     {
         if (game.up > 0.0f) {
-            powerBar.draw(window, ball.getPosition(), -90.f, game.up / 10.f, 10.f);
+            powerBar.draw(window, ball.getPosition(), 90.f, game.up / 10.f, 22.f);
         }
         if (game.left > 0.0f) {
-            powerBar.draw(window, ball.getPosition(), 180.f, game.left / 10.f, 10.f);
+            powerBar.draw(window, ball.getPosition(), 0, game.left / 10.f, 22.f);
         }
     }
 }

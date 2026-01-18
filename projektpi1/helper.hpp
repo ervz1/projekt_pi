@@ -760,12 +760,12 @@ private:
     }
 
 public:
-    float BOTTOM_OFFSET = 8.f;
+    float BOTTOM_OFFSET = 0.f;
     void addOffset(){
         BOTTOM_OFFSET = 0;
     };
     void removeOffset(){
-        BOTTOM_OFFSET = 8.f;
+        BOTTOM_OFFSET = 0.f;
     };
 
     fillPiwa(const sf::Texture& tex, int maxValue)
@@ -792,7 +792,7 @@ public:
 
         bar.setTextureRect({
             {0, 0},
-            {static_cast<int>(size.x), h}
+            {static_cast<int>(size.x), h - 8}
         });
 
         bar.setPosition({0.f, static_cast<float>(size.y - h - BOTTOM_OFFSET)

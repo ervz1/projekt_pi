@@ -6,16 +6,16 @@
 ### Przebieg mojej tury:
 | **A) Trafiam** | **B) Nie trafiam** |
 | --- | --- |
-| 1. Zaczynam pić piwo | 1. ~~Punkt dla przeciwnika~~ |
+| 1. Zaczynam pić piwo |
 | 2. Kończę pić w momencie, gdy przeciwnik postawi puszkę i wróci do swojej bazy | 2. Koniec mojej tury |
-| 3. Koniec mojej tury |  |
+| 3. Koniec mojej tury |
 ## 
 ### Przebieg tury przeciwnika:
 | **C) Przeciwnik trafia** | **D) Przeciwnik nie trafia** |
 | --- | --- |
-| 1. Biegnę podnieść puszkę | 1. ~~Punkt dla mnie~~ |
-| 2. Przeciwnik pije swoje piwo dopóki ja nie przewrócę puszki i nie wrócę na miejsce | 2. Koniec tury przeciwnika |
-| 3. Koniec tury przeciwnika |  |
+| 1. Biegnę podnieść puszkę |
+| 2. Przeciwnik pije swoje piwo dopóki ja nie podniosę puszki i nie wrócę na miejsce | 2. Koniec tury przeciwnika |
+| 3. Koniec tury przeciwnika | 
 
 ##
 ##
@@ -25,10 +25,7 @@
 | Zdarzenie | Akcja |
 | --- | --- |
 | Rzut puszką | Strzałkami ustawiam wektory rzutu |
-| Start i bieg do puszki | Nadupcam w spację |
-| Podniesienie puszki | Kombinacja klawiszy: np. G + P |
-| Powrót do bazy | Nadupcam w spację |
-| Postawienie puszki w bazie | Kombinacja klawiszy (np. H + O) |
+| Start picia | Klikam w spację |
 | Zakończenie tury | Automatyczneie |
 
 ##
@@ -44,11 +41,11 @@
 | Zdarzenie | Akcja |
 | --- | --- |
 | Rzut puszką przez komputer | Silnik losuje parametry rzutu |
-| Trafienie puszki | Uruchomienie timera biegu |
-| Start picia piwa | Pasek piwa się pojawia; gracz musi nadupcac klawisz np. P - inaczej picie pauzuje |
-| Picie piwa | Co 0.5 s pasek piwa maleje o wartość miedzy 3–5%, zalezna od: ___ilosc uderzen w klawisz P / dt___ |
-| Bieg przeciwnika (w tle) | animacja biegu |
-| Stop picia piwa | Timer picia się zatrzymuje |
+| Trafienie puszki | Biegne klikając w spacje |
+| Start picia piwa | Zawartość Piwa komputera spada |
+| Dobiegnięcie do puskzi | Klikam B żeby podnieść puszkę |
+| Bieg  gracza | Klikam spacje by biec |
+| Stop picia piwa | Timer picia się zatrzymuje gdy wróce |
 | Zakończenie tury przeciwnika | Przejście do tury gracza; ilosc wypitego piwa co runde sie sumuje |
 
 ##
@@ -62,21 +59,17 @@
 
 ##
 ##
-# 3. Dodatkowe założenia:
-### 1. W trakcie picia piwa &lt;_przez gracza_&gt; mozna zrobic wypicie więcej niż jednego piwa.
-* *ervz: ciężko jest wypić jedno piwo w pare sekund*
-* * idk ja tam swego czasu potrafilem *
-### 2. Mozna wybrać poziom trudności bota - bot moze np:  
-* czesciej trafiac
+
+### 1. Trudność zwiększa się wraz z rundą do pewnego momentu - bot:  
+* czesciej trafia
 * szybciej biec po ustawienie swojej puszki
-* cokolwiek innego co przyjdzie do glowy
-### 3. Zwiększenie własnych umiejętności poprzez:
-* kompletnie nie mam pomysłu, ale rzeczy typu lepsze piwa czy coś były mówione - to ma jakiś sens, I guess
-* *ervz: mocny leb, sniper, atleta, i in.*
-### 4. Dodatkowe założenia zrealizowałbym po ukończeniu szkieletu, czyli tego co jest w tabelce
-### 5. Pomyślałem jeszcze np ze mozna trafic w bota i za to dostac pkty XDDD
-* *ervz: w takim wypadku bot tez musi moc trafiac gracza*
-##
+
+### 2. Menu Logowania:
+* Przed rozpoczęciem rozgrywki gracz się loguje lub tworzy "konto"
+
+### 3. Menu customizacji:
+* Gracz może wybrać wygląd swojego awatara
+  
 ###
 ###
 ##
@@ -89,7 +82,7 @@
 
 ## 🥸 Konfiguracja Projektu (Visual Studio)
 
-🧿👄🧿
+Wymagane: SFML 3.0, C++ 14,17, lub 20
 
 Aby poprawnie skonfigurować projekt, otwórz **Właściwości Projektu** (*Project Properties*) i wprowadź poniższe ustawienia.
 

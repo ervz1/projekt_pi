@@ -1075,7 +1075,7 @@ void groundReset(canSprite &ball, GameStart &game, float ball_x)
         //else {
             game.isFlying = false;
             game.velocity = { 0.f, 0.f };
-            //ball.setPosition({ball_x, game.ball_y});
+            ball.setPosition({ball_x, game.ball_y});
 
         //}
         

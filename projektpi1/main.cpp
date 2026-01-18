@@ -20,7 +20,7 @@ void updateViewViewport(const sf::RenderWindow&, sf::View&);
 
 enum class GameState { Menu, Game, CustomizeMenu, LoginScreen, GameOver};
 bool showInfo = false;
-
+sf::Image icon;
 std::string buttText = "assets/img/button.png";
 sf::Texture logoText("assets/img/logo.png");
 sf::Texture endScreenBGText("assets/img/loginbg.png");
@@ -214,9 +214,19 @@ int main()
     customShirtColor.setFillColor(playerChar.topColor);
 
 
-    //  Rozmiar okna, resize
-    sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "Flanki");
-    window.setFramerateLimit(60);
+    auto videoMode = sf::VideoMode::getDesktopMode();
+
+    sf::RenderWindow window(
+        videoMode,
+        "Flanki",
+        sf::Style::Default,
+        sf::State::Fullscreen
+    );
+
+    if (icon.loadFromFile("assets/img/icon.png"))
+    {
+        window.setIcon(icon.getSize(), icon.getPixelsPtr());
+    }
 
     sf::View view(sf::FloatRect({ 0.f, 0.f }, mainWin));
     view.setCenter(sf::Vector2f(mainWin.x / 2.f, mainWin.y / 2.f));
@@ -363,22 +373,13 @@ while (window.isOpen())
     // ===== EVENTY =====
     while (const std::optional event = window.pollEvent())
     {
-        if (event->is<sf::Event::Closed>())
-            window.close();
+        if (event->is<sf::Event::Closed>()) {
 
-        if (currentState == GameState::LoginScreen)
-        {
-            if (const auto* resized = event->getIf<sf::Event::Resized>())
-            {
-                updateViewViewport(window, view);
-                view.setSize(mainWin);
-                view.setCenter({ mainWin.x / 2.f, mainWin.y / 2.f });
-                window.setView(view);
-            }
-            login.handleEvent(*event);
+            window.close();
         }
         else
         {
+            login.handleEvent(*event);
             eventLoop(event, window, view, currentState,
                       playButton, mousePosUI, exitButton);
         }
@@ -443,7 +444,27 @@ while (window.isOpen())
 }
 void eventLoop(const std::optional<sf::Event> &event, sf::RenderWindow &window, sf::View &view, GameState &currentState, Button &playButton, sf::Vector2f &mousePos, Button &exitButton){
 
-    // 1.1 zamknięcie
+    static bool isFullscreen = true;
+
+    if (const auto* keyEvent = event->getIf<sf::Event::KeyPressed>())
+    {
+        if (keyEvent->scancode == sf::Keyboard::Scancode::F11)
+        {
+            isFullscreen = !isFullscreen;
+
+            if (isFullscreen)
+            {
+                window.create(sf::VideoMode::getDesktopMode(), "Flanki", sf::Style::Default, sf::State::Fullscreen);
+            }
+            else
+            {
+                window.create(sf::VideoMode({ 800, 600 }), "Flanki", sf::Style::Default, sf::State::Windowed);
+            }
+            window.setIcon(icon.getSize(), icon.getPixelsPtr());
+            updateViewViewport(window, view);
+            window.setView(view);
+        }
+    }
     if (event->is<sf::Event::Closed>())
         window.close();
 

@@ -964,15 +964,11 @@ void rzutGracz(GameStart &game, float ramp_up)
     if (chargingUp || chargingLeft)
     {
         game.isCharging = true;
-        // Charging until max
         if (chargingUp)
             game.up += ramp_up;
         if (chargingLeft)
             game.left += ramp_up;
 
-        // If charged to max:
-
-        // Cap at max
 
         /*if (game.up > game.maxCharge) game.up = game.maxCharge;
         if (game.left > game.maxCharge) game.left = game.maxCharge;*/
@@ -1004,8 +1000,6 @@ void bounce(canSprite &ball, middleCanSprite&can, GameStart &game, sf::Sound &so
         game.velocity.y = -100.f;
         game.velocity.x = - (can.getPosition().x - ball.getPosition().x) * 3;
         
-
-        //can.setFillColor(sf::Color::Magenta);
 
         game.hasHit   = true;   // blokada na resztę lotu
         game.hitEvent = true;   // JEDNORAZOWY event do logic()
@@ -1178,10 +1172,7 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
         //playButton.draw(window);
         exitButton.draw(window);
         
-        game = GameStart();
-        game.scorePlayer = 0;
-        game.scoreBot = 0;
-        game.round = 1;
+        
         
     }
 

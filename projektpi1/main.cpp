@@ -23,6 +23,7 @@ bool showInfo = false;
 
 std::string buttText = "assets/img/button.png";
 sf::Texture logoText("assets/img/logo.png");
+sf::Texture endScreenBGText("assets/img/loginbg.png");
 sf::Texture gameBG;
 sf::Texture menuBG;
 sf::Texture mirrorText;
@@ -35,6 +36,7 @@ sf::Texture custClothesBGText("assets/img/clothesBG.png");
 sf::Texture colorSelectBGText("assets/img/colorSelectBG.png");
 sf::RectangleShape logicalBackground(mainWin);
 sf::Font font;
+sf::RectangleShape endScreenBG({ 785.f, 497.f });
 sf::RectangleShape mirror;
 sf::RectangleShape chooseBGS;
 sf::RectangleShape infoRect({800, 498});
@@ -88,7 +90,7 @@ colorSelectScreen clothesColorSelect(clothesPalette, 0, 24);
 
 Button diceLook({ 57.f, 49.f }, { 148, 530 }, sf::Color(230, 230, 230), sf::Color::White, "assets/img/dice.png");
 
-float musicVolume = 40.f;
+float musicVolume = 20.f;
 
 std::random_device rd;
 std::mt19937 gen(rd());
@@ -172,7 +174,7 @@ void bounce(canSprite &ball, middleCanSprite&can, GameStart &game, sf::Sound &so
 
 void groundReset(canSprite &ball, GameStart &game, float ball_x);
 
-void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, canSprite &ball, middleCanSprite &can, canSprite &ball2, GameStart &game, sf::Text &aim, sf::Text &move, sf::Text &drink, ramkaPiwa &drinkBar, fillPiwa &visBar, sf::Text &levelDisplay, ramkaPiwa& enemyBar, fillPiwa& visEnemyBar, sf::Text scoreText, sf::Text roundText, std::string loggedUser, sf::Vector2f& mousePos);
+void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, canSprite &ball, middleCanSprite &can, canSprite &ball2, GameStart &game, ramkaPiwa &drinkBar, fillPiwa &visBar, sf::Text &levelDisplay, ramkaPiwa& enemyBar, fillPiwa& visEnemyBar, std::string loggedUser, sf::Vector2f& mousePos);
 
 void drawBars(GameStart &game, canSprite &ball, sf::RenderWindow &window);
 
@@ -193,6 +195,9 @@ int main()
 
     infoRect.setTexture(&infoTexture);
     infoRect.setPosition({ 0, 69 });
+
+    endScreenBG.setTexture(&endScreenBGText);
+    endScreenBG.setPosition({ 15.f, 71.f });
     playerSP.flip(-1), game.graczFacingRight = false;
     logo.setTexture(&logoText);
     logo.setOrigin(logo.getGeometricCenter());
@@ -223,8 +228,8 @@ int main()
     sf::Font font;
     if (!font.openFromFile("assets/fonts/KiwiSoda.ttf")) return -1;
 
-    sf::Font textFont;
-    if (!textFont.openFromFile("assets/fonts/KOMIKAX_.ttf")) return -1;
+    //sf::Font textFont;
+    //if (!textFont.openFromFile("assets/fonts/KOMIKAX_.ttf")) return -1;
 
     LoginPanelSFML login(window, font);
     std::string loggedUser;
@@ -301,11 +306,6 @@ int main()
     colorSelectBG.setTexture(&colorSelectBGText);
     colorSelectBG.setPosition({ 0, 106 });
 
-    // Obiekty - puszki
-    /*sf::CircleShape can(15.f);
-    can.setFillColor(sf::Color::Yellow);
-    can.setPosition({ 400.f, 550.f });*/
-
     middleCanSprite can({ 400.f, 500.f + 74.f });
     can.setPosition({ 400.f, 500.f + 74.f });
 
@@ -314,45 +314,7 @@ int main()
     canSprite ball2({ game.bot_ball_x, game.ball_y}, sf::Color::Red);
     ball2.setPosition({ game.bot_ball_x, game.ball_y });
 
-
-    //powerBar barLeft({});
-
     sf::Sound sound(buffer);
-
-    // Punkty
-    sf::Text scoreText(font, "", 30);
-    scoreText.setFillColor(sf::Color::White);
-    scoreText.setPosition({20.f, 20.f});
-    scoreText.setOutlineColor(sf::Color::Black);
-    scoreText.setOutlineThickness(2.0f);
-    scoreText.setPosition({ 580.f, 500.f });
-
-    sf::Text roundText(font, "", 30);
-    roundText.setFillColor(sf::Color::White);
-    roundText.setOutlineColor(sf::Color::Black);
-    roundText.setOutlineThickness(2.0f);
-    roundText.setPosition({220.f, 500.f});
-    
-    
-    sf::Text aim(textFont, "Celowanie - Strzalki(Gora/Lewo) \n Klikanie Spacji po trafieniu uzupelnia pasek \nJak trafi przeciwnik to klikanie spacji by biec\n A przy puszcze kliknac 'b' zeby podniesc");
-    aim.setCharacterSize(15);
-    aim.setStyle(sf::Text::Bold);
-    aim.setFillColor(sf::Color::White);
-    aim.setOutlineColor(sf::Color::Black);
-    aim.setPosition({ 200, 50});
-    aim.setOutlineThickness(2.0f);
-
-    sf::Text drink(textFont, "");
-    drink.setCharacterSize(15);
-    drink.setStyle(sf::Text::Bold);
-    drink.setFillColor(sf::Color::Red);
-    drink.setPosition({ 400, 80});
-
-    sf::Text move(textFont, "");
-    move.setCharacterSize(15);
-    move.setStyle(sf::Text::Bold);
-    move.setFillColor(sf::Color::Red);
-    move.setPosition({ 400, 110 });
 
     // piwo gracza
     ramkaPiwa drinkBar(barOutlineTex);
@@ -410,6 +372,13 @@ while (window.isOpen())
 
         if (currentState == GameState::LoginScreen)
         {
+            if (const auto* resized = event->getIf<sf::Event::Resized>())
+            {
+                updateViewViewport(window, view);
+                view.setSize(mainWin);
+                view.setCenter({ mainWin.x / 2.f, mainWin.y / 2.f });
+                window.setView(view);
+            }
             login.handleEvent(*event);
         }
         else
@@ -428,12 +397,12 @@ while (window.isOpen())
               gravity, dt, sound, visBar,
               level, levelDisplay, visEnemyBar);
 
-        scoreText.setString(
-            "Gracz: " + std::to_string(game.scorePlayer) +
-            "\tBot: " + std::to_string(game.scoreBot)
-        );
-        roundText.setString("Runda: " + std::to_string(game.round));
-        scoreText.setString("Wynik: " + std::to_string(game.scorePlayer));
+        //scoreText.setString(
+        //    "Gracz: " + std::to_string(game.scorePlayer) +
+        //    "\tBot: " + std::to_string(game.scoreBot)
+        //);
+        //roundText.setString("Runda: " + std::to_string(game.round));
+        //scoreText.setString("Wynik: " + std::to_string(game.scorePlayer));
     }
     else
     {
@@ -459,18 +428,18 @@ while (window.isOpen())
     {
         drawGame(currentState, playButton, window, exitButton,
                  ball, can, ball2, game,
-                 aim, move, drink,
                  drinkBar, visBar,
                  levelDisplay,
                  enemyBar, visEnemyBar,
-                 scoreText, roundText, loggedUser, mousePos);
+                 loggedUser, mousePos);
     }
 
     if (fadingOut)
     {
-        musicVolume -= (3.f * dt); 
-        music.setVolume(musicVolume);
+        // musicVolume -= (3.f * dt);
+        // music.setVolume(musicVolume);
     }
+
     if (musicVolume <= 0) {fadingOut = false;music.stop();}
 
     window.display();
@@ -929,6 +898,7 @@ void logic(GameState &currentState, GameStart &game,
         game.scorePlayer++;
         game.round++;
         enemySP.changeLook(randomChar());
+        can.randomCan();
         resetRound();
     }
 }
@@ -1100,7 +1070,7 @@ void groundReset(canSprite &ball, GameStart &game, float ball_x)
 void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& window,
     Button& exitButton, canSprite& ball, middleCanSprite& can,
     canSprite& ball2, GameStart& game,
-    sf::Text& aim, sf::Text& move, sf::Text& drink, ramkaPiwa &drinkBar, fillPiwa &visBar, sf::Text &levelDisplay, ramkaPiwa& enemyBar, fillPiwa& visEnemyBar, sf::Text scoreText, sf::Text roundText, std::string loggedUser, sf::Vector2f& mousePos)
+    ramkaPiwa &drinkBar, fillPiwa &visBar, sf::Text &levelDisplay, ramkaPiwa& enemyBar, fillPiwa& visEnemyBar, std::string loggedUser, sf::Vector2f& mousePos)
 {
 
     
@@ -1198,14 +1168,10 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
             std::ofstream file("score.txt", std::ios::app);
             file << loggedUser << ":" << game.scorePlayer << "\n";
             //loggedUser
-            
             game.scoreSaved = true;
         }
 
-        sf::Font textFont;
-        textFont.openFromFile("assets/fonts/KOMIKAX_.ttf");
-
-        sf::Text userScore(textFont, "", 30);
+        sf::Text userScore(font, "", 36);
         userScore.setFillColor(sf::Color::White);
         userScore.setOutlineColor(sf::Color::Black);
         userScore.setOutlineThickness(2.0f);
@@ -1214,7 +1180,7 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
         
 
         
-
+        window.draw(endScreenBG);
         window.draw(logo);
         window.draw(userScore);
         

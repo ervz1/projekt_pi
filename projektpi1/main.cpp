@@ -466,9 +466,10 @@ while (window.isOpen())
 
     if (fadingOut)
     {
-        musicVolume -= (3.f * dt); 
-        music.setVolume(musicVolume);
+        // musicVolume -= (3.f * dt);
+        // music.setVolume(musicVolume);
     }
+
     if (musicVolume <= 0) {fadingOut = false;music.stop();}
 
     window.display();

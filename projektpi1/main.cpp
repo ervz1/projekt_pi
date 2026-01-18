@@ -149,6 +149,8 @@ struct GameStart {
     int round = 1;          // zamiast level jak wolisz
 
     bool graczFacingRight = true;
+
+    bool scoreSaved = false;
 };
 
 void logic(GameState &currentState, GameStart &game, canSprite &ball, middleCanSprite &can, float ramp_up, canSprite &ball2, float gravity,
@@ -164,7 +166,7 @@ void bounce(canSprite &ball, middleCanSprite&can, GameStart &game, sf::Sound &so
 
 void groundReset(canSprite &ball, GameStart &game, float ball_x);
 
-void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, canSprite &ball, middleCanSprite &can, canSprite &ball2, GameStart &game, sf::Text &aim, sf::Text &move, sf::Text &drink, ramkaPiwa &drinkBar, fillPiwa &visBar, sf::Text &levelDisplay, ramkaPiwa& enemyBar, fillPiwa& visEnemyBar, sf::Text scoreText, sf::Text roundText);
+void drawGame(GameState currentState, Button &playButton, sf::RenderWindow &window, Button &exitButton, canSprite &ball, middleCanSprite &can, canSprite &ball2, GameStart &game, sf::Text &aim, sf::Text &move, sf::Text &drink, ramkaPiwa &drinkBar, fillPiwa &visBar, sf::Text &levelDisplay, ramkaPiwa& enemyBar, fillPiwa& visEnemyBar, sf::Text scoreText, sf::Text roundText, std::string loggedUser, sf::Vector2f& mousePos);
 
 void drawBars(GameStart &game, canSprite &ball, sf::RenderWindow &window);
 
@@ -298,9 +300,12 @@ int main()
     sf::Sound sound(buffer);
 
     // Punkty
-    sf::Text scoreText(font, "", 18);
+    sf::Text scoreText(font, "", 30);
     scoreText.setFillColor(sf::Color::White);
     scoreText.setPosition({20.f, 20.f});
+    scoreText.setOutlineColor(sf::Color::Black);
+    scoreText.setOutlineThickness(2.0f);
+    scoreText.setPosition({ 580.f, 500.f });
 
     sf::Text roundText(font, "", 30);
     roundText.setFillColor(sf::Color::White);
@@ -406,6 +411,7 @@ while (window.isOpen())
             "\tBot: " + std::to_string(game.scoreBot)
         );
         roundText.setString("Runda: " + std::to_string(game.round));
+        scoreText.setString("Wynik: " + std::to_string(game.scorePlayer));
     }
     else
     {
@@ -435,7 +441,7 @@ while (window.isOpen())
                  drinkBar, visBar,
                  levelDisplay,
                  enemyBar, visEnemyBar,
-                 scoreText, roundText);
+                 scoreText, roundText, loggedUser, mousePos);
     }
 
     window.display();
@@ -464,7 +470,7 @@ void eventLoop(const std::optional<sf::Event> &event, sf::RenderWindow &window, 
     // }
 
     // 1.3 menu
-    else if (currentState == GameState::Menu || currentState == GameState::CustomizeMenu )
+    else if (currentState == GameState::Menu || currentState == GameState::CustomizeMenu || currentState == GameState::GameOver)
     {   
         handleMenu(event, playButton, mousePos, currentState, exitButton, window);
     }
@@ -530,7 +536,7 @@ void handleMenu(const std::optional<sf::Event> &event, Button &playButton, sf::V
     {
         if (mouseEvent->button == sf::Mouse::Button::Left)
         {
-            if (currentState == GameState::Menu) {
+            if (currentState == GameState::Menu || currentState == GameState::GameOver) {
                 if (playButton.isMouseOver(mousePos))
                 {
                     playerSP.flip(-1);
@@ -1012,7 +1018,7 @@ void drinkCounter(GameStart& game, fillPiwa& visBar)
     if (game.myDrink >= DRINK_MAX) return;
 
     game.myDrink++;
-    visBar.setValue(game.myDrink);
+    visBar.setValue(game.myDrink - 5);
 }
 void drinkCounterEnemy(GameStart& game, fillPiwa& visEnemyBar)
 {
@@ -1020,7 +1026,7 @@ void drinkCounterEnemy(GameStart& game, fillPiwa& visEnemyBar)
     if (game.enemyDrink >= DRINK_MAX) return;
 
     game.enemyDrink++;
-    visEnemyBar.setValue(game.enemyDrink);
+    visEnemyBar.setValue(game.enemyDrink - 5);
 }
 
 void groundReset(canSprite &ball, GameStart &game, float ball_x)
@@ -1030,18 +1036,18 @@ void groundReset(canSprite &ball, GameStart &game, float ball_x)
     float rand = dis3(gen);
     if (ball.getPosition().y > rand)
     {
-        if (fabs(ball.getPosition().x - 400.f) > 115) {
+        //if (fabs(ball.getPosition().x - 400.f) > 115) {
 
+        //    game.isFlying = false;
+        //    game.velocity = { 0.f, 0.f };
+        //    //ball.setPosition({ ball_x, game.ball_y });
+        //}
+        //else {
             game.isFlying = false;
             game.velocity = { 0.f, 0.f };
-            //ball.setPosition({ ball_x, game.ball_y });
-        }
-        else {
-            game.isFlying = false;
-            game.velocity = { 0.f, 0.f };
-            ball.setPosition({ball_x, game.ball_y});
+            //ball.setPosition({ball_x, game.ball_y});
 
-        }
+        //}
         
         game.turn = !game.turn; 
     }
@@ -1051,14 +1057,18 @@ void groundReset(canSprite &ball, GameStart &game, float ball_x)
 void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& window,
     Button& exitButton, canSprite& ball, middleCanSprite& can,
     canSprite& ball2, GameStart& game,
-    sf::Text& aim, sf::Text& move, sf::Text& drink, ramkaPiwa &drinkBar, fillPiwa &visBar, sf::Text &levelDisplay, ramkaPiwa& enemyBar, fillPiwa& visEnemyBar, sf::Text scoreText, sf::Text roundText)
+    sf::Text& aim, sf::Text& move, sf::Text& drink, ramkaPiwa &drinkBar, fillPiwa &visBar, sf::Text &levelDisplay, ramkaPiwa& enemyBar, fillPiwa& visEnemyBar, sf::Text scoreText, sf::Text roundText, std::string loggedUser, sf::Vector2f& mousePos)
 {
+
+    
     if (currentState == GameState::Menu)
     {
+        game = GameStart();
         window.draw(logo);
         playButton.draw(window);
         customButton.draw(window);
         exitButton.draw(window);
+        game.scoreSaved = false;
     }
     else if (currentState == GameState::CustomizeMenu) {
         playerSP.setPos(170.f, 300.f);
@@ -1117,6 +1127,7 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
     {
         //window.draw(scoreText);
         window.draw(roundText);
+        window.draw(scoreText);
 
         ball.draw(window);
         can.draw(window);
@@ -1138,6 +1149,40 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
         window.draw(levelDisplay);
 
         drawBars(game, ball, window);
+    } else if(currentState == GameState::GameOver){
+
+        if (!game.scoreSaved) {
+            std::ofstream file("score.txt", std::ios::app);
+            file << loggedUser << ":" << game.scorePlayer << "\n";
+            //loggedUser
+            
+            game.scoreSaved = true;
+        }
+
+        sf::Font textFont;
+        textFont.openFromFile("assets/fonts/KOMIKAX_.ttf");
+
+        sf::Text userScore(textFont, "", 30);
+        userScore.setFillColor(sf::Color::White);
+        userScore.setOutlineColor(sf::Color::Black);
+        userScore.setOutlineThickness(2.0f);
+        userScore.setPosition({ 220.f, 250.f });
+        userScore.setString( "Twoj Wynik: \n" + loggedUser + ":" + std::to_string(game.scorePlayer));
+        
+
+        
+
+        window.draw(logo);
+        window.draw(userScore);
+        
+        //playButton.draw(window);
+        exitButton.draw(window);
+        
+        game = GameStart();
+        game.scorePlayer = 0;
+        game.scoreBot = 0;
+        game.round = 1;
+        
     }
 
 }

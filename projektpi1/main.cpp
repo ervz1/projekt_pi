@@ -90,7 +90,7 @@ colorSelectScreen clothesColorSelect(clothesPalette, 0, 24);
 
 Button diceLook({ 57.f, 49.f }, { 148, 530 }, sf::Color(230, 230, 230), sf::Color::White, "assets/img/dice.png");
 
-float musicVolume = 40.f;
+float musicVolume = 20.f;
 
 std::random_device rd;
 std::mt19937 gen(rd());
@@ -370,6 +370,13 @@ while (window.isOpen())
 
         if (currentState == GameState::LoginScreen)
         {
+            if (const auto* resized = event->getIf<sf::Event::Resized>())
+            {
+                updateViewViewport(window, view);
+                view.setSize(mainWin);
+                view.setCenter({ mainWin.x / 2.f, mainWin.y / 2.f });
+                window.setView(view);
+            }
             login.handleEvent(*event);
         }
         else

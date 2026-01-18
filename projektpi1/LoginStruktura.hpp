@@ -185,7 +185,7 @@ void LoginPanelSFML::updateTexts() {
 
 void LoginPanelSFML::draw() {
     
-    window.setView(window.getDefaultView());
+    /*window.setView(window.getDefaultView());*/
     window.draw(panel);
     window.draw(infoText);
     window.draw(inputText);

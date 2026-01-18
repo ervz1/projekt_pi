@@ -40,15 +40,15 @@ private:
 
 LoginPanelSFML::LoginPanelSFML(sf::RenderWindow& win, const sf::Font& font)
     :
-     window(win), infoText(font, "", 40), inputText(font, "", 36),confirmButton(
+     window(win), infoText(font, "", 32), inputText(font, "", 32),confirmButton(
     {228.f, 95.f},
     {286.f, 390.f},
     sf::Color(96,178,37),
     sf::Color(109,204,42),
     "assets/img/button.png",
-    "Dalej",
+    "DALEJ",
     "assets/fonts/KiwiSoda.ttf",
-    40
+    32
 )
 {
     //if (bgTexture.loadFromFile(

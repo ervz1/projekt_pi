@@ -224,12 +224,8 @@ int main()
     window.setView(view);
     // menu logowania:
         
-    // fonty
-    sf::Font font;
     if (!font.openFromFile("assets/fonts/KiwiSoda.ttf")) return -1;
-
-    //sf::Font textFont;
-    //if (!textFont.openFromFile("assets/fonts/KOMIKAX_.ttf")) return -1;
+    font.setSmooth(false);
 
     LoginPanelSFML login(window, font);
     std::string loggedUser;
@@ -309,9 +305,9 @@ int main()
     middleCanSprite can({ 400.f, 500.f + 74.f });
     can.setPosition({ 400.f, 500.f + 74.f });
 
-    canSprite ball({game.ball_x, game.ball_y}, sf::Color::Blue);
+    canSprite ball({game.ball_x, game.ball_y}, sf::Color(7, 73, 22));
     ball.setPosition({ game.ball_x, game.ball_y });
-    canSprite ball2({ game.bot_ball_x, game.ball_y}, sf::Color::Red);
+    canSprite ball2({ game.bot_ball_x, game.ball_y}, sf::Color(166, 141, 41));
     ball2.setPosition({ game.bot_ball_x, game.ball_y });
 
     sf::Sound sound(buffer);
@@ -1171,12 +1167,10 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
             game.scoreSaved = true;
         }
 
-        sf::Text userScore(font, "", 36);
+        sf::Text userScore(font, "", 48);
         userScore.setFillColor(sf::Color::White);
-        userScore.setOutlineColor(sf::Color::Black);
-        userScore.setOutlineThickness(2.0f);
         userScore.setPosition({ 220.f, 250.f });
-        userScore.setString( "Twoj Wynik: \n" + loggedUser + ":" + std::to_string(game.scorePlayer));
+        userScore.setString( "Twoj Wynik: \n" + loggedUser + ": " + std::to_string(game.scorePlayer));
         
 
         

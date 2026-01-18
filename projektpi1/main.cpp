@@ -10,6 +10,7 @@
 #include "helper.hpp"
 #include <cmath> 
 #include <vector>
+#include "LoginStruktura.hpp"
 
 // 1 - hair, 2 - skin, 3 - shirt, 4 - pants, 5 - shoes
 int activeColorMode = 0;
@@ -17,7 +18,7 @@ int activeColorMode = 0;
 sf::Vector2f mainWin = { 800.0f, 600.0f };
 void updateViewViewport(const sf::RenderWindow&, sf::View&);
 
-enum class GameState { Menu, Game, GameMenu, CustomizeMenu };
+enum class GameState { Menu, Game, GameMenu, CustomizeMenu, LoginScreen};
 
 std::string buttText = "assets/img/button.png";
 sf::Texture logoText("assets/img/logo.png");
@@ -34,12 +35,12 @@ sf::RectangleShape logicalBackground(mainWin);
 sf::Font font;
 sf::RectangleShape mirror;
 sf::RectangleShape chooseBGS;
-std::string fontS = "assets/fonts/DejaVuSans.ttf";
+std::string fontS = "assets/fonts/KiwiSoda.ttf";
 
 sf::RectangleShape logo({645, 239});
-Button playButton({ 228.f, 95.f }, { 273.f, 250.f }, sf::Color(96, 178, 37), sf::Color(109, 204, 42), buttText, "START", fontS, 26);
-Button customButton({ 228.f, 95.f }, { 273.f, 360.f }, sf::Color(100, 100, 100), sf::Color(150, 150, 150), buttText, "CUSTOM", fontS, 26);
-Button exitButton({ 228.f, 95.f }, { 273.f, 470.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), buttText, "WYJSCIE", fontS, 26);
+Button playButton({ 228.f, 95.f }, { 273.f, 250.f }, sf::Color(96, 178, 37), sf::Color(109, 204, 42), buttText, "START", fontS, 32);
+Button customButton({ 228.f, 95.f }, { 273.f, 360.f }, sf::Color(186, 175, 15), sf::Color(237, 224, 33), buttText, "POSTAC", fontS, 32);
+Button exitButton({ 228.f, 95.f }, { 273.f, 470.f }, sf::Color(178, 37, 37), sf::Color(204, 42, 42), buttText, "WYJSCIE", fontS, 32);
 
 sf::Vector2f enemyBasePos = sf::Vector2f({ 50.0, 215.0 });
 sf::Vector2f playerBasePos = sf::Vector2f({ 750.0, 215.0 });
@@ -56,20 +57,20 @@ std::string arrL = "assets/img/arrLeft.png";
 std::string colSelPath = "assets/img/colorSelect.png";
 std::string colSelBPath = "assets/img/colorSelectBlank.png";
 
-Button customHairRight({ 45.f, 39.f }, {722.f, 154.f}, sf::Color(230, 230, 230), sf::Color::White, arrR, "", fontS, 0);
-Button customHairLeft({ 46.f, 40.f }, {480.f, 151.f}, sf::Color(230, 230, 230), sf::Color::White, arrL, "", fontS, 0);
-Button customHairColor({72.f, 67.f}, {686, 207}, sf::Color(200, 200, 200), sf::Color::White, colSelPath, "", fontS, 0);
+Button customHairRight({ 45.f, 39.f }, {722.f, 154.f}, sf::Color(230, 230, 230), sf::Color::White, arrR);
+Button customHairLeft({ 46.f, 40.f }, {480.f, 151.f}, sf::Color(230, 230, 230), sf::Color::White, arrL);
+Button customHairColor({72.f, 67.f}, {686, 207}, sf::Color(200, 200, 200), sf::Color::White, colSelPath);
 
-Button customHatRight({ 45.f, 39.f }, {540.f, 60.f}, sf::Color(230, 230, 230), sf::Color::White, arrR, "", fontS, 0);
-Button customHatLeft({ 46.f, 40.f }, {298.f, 57.f}, sf::Color(230, 230, 230), sf::Color::White, arrL, "", fontS, 0);
+Button customHatRight({ 45.f, 39.f }, {540.f, 60.f}, sf::Color(230, 230, 230), sf::Color::White, arrR);
+Button customHatLeft({ 46.f, 40.f }, {298.f, 57.f}, sf::Color(230, 230, 230), sf::Color::White, arrL);
 
-Button customFaceRight({ 45.f, 39.f }, {544.f, 277.f}, sf::Color(230, 230, 230), sf::Color::White, arrR, "", fontS, 0);
-Button customFaceLeft({ 46.f, 40.f }, {302.f, 274.f}, sf::Color(230, 230, 230), sf::Color::White, arrL, "", fontS, 0);
-Button customSkinColor({ 72.f, 67.f }, { 510, 330 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath, "", fontS, 0);
+Button customFaceRight({ 45.f, 39.f }, {544.f, 277.f}, sf::Color(230, 230, 230), sf::Color::White, arrR);
+Button customFaceLeft({ 46.f, 40.f }, {302.f, 274.f}, sf::Color(230, 230, 230), sf::Color::White, arrL);
+Button customSkinColor({ 72.f, 67.f }, { 510, 330 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath);
 
-Button customShirtColorButt({ 72.f, 67.f }, { 646, 496 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath, "", fontS, 0);
-Button customPantsColorButt({ 72.f, 67.f }, { 470, 496 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath, "", fontS, 0);
-Button customShoesColorButt({ 72.f, 67.f }, { 282, 496 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath, "", fontS, 0);
+Button customShirtColorButt({ 72.f, 67.f }, { 646, 496 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath);
+Button customPantsColorButt({ 72.f, 67.f }, { 470, 496 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath);
+Button customShoesColorButt({ 72.f, 67.f }, { 282, 496 }, sf::Color(200, 200, 200), sf::Color::White, colSelPath);
 
 sf::RectangleShape customClothesBG({474, 122});
 sf::RectangleShape customShoesColor({150, 52});
@@ -79,7 +80,7 @@ sf::RectangleShape customShirtColor({ 106, 86 });
 sf::RectangleShape colorSelectBG({799, 422});
 colorSelectScreen clothesColorSelect(clothesPalette, 0, 24);
 
-Button diceLook({ 57.f, 49.f }, { 148, 41 }, sf::Color(230, 230, 230), sf::Color::White, "assets/img/dice.png", "", fontS, 0);
+Button diceLook({ 57.f, 49.f }, { 148, 41 }, sf::Color(230, 230, 230), sf::Color::White, "assets/img/dice.png");
 
 
 
@@ -205,9 +206,19 @@ int main()
     view.setCenter(sf::Vector2f(mainWin.x / 2.f, mainWin.y / 2.f));
     updateViewViewport(window, view);
     window.setView(view);
+    // menu logowania:
+        
+    // fonty
+    sf::Font font;
+    if (!font.openFromFile("assets/fonts/KiwiSoda.ttf")) return -1;
+
+    LoginPanelSFML login(window, font);
+    std::string loggedUser;
+
+    GameState currentState = GameState::LoginScreen;
 
     // stan gry (menu czy gra)
-    GameState currentState = GameState::Menu;
+    // GameState currentState = GameState::Menu;
 
     // Assety
 
@@ -217,10 +228,7 @@ int main()
 
     if (!barFillTex.loadFromFile("assets/img/bar/barfill.png")) return -1;
     if (!barOutlineTex.loadFromFile("assets/img/bar/baroutline.png")) return -1;
-    
-    // fonty
-    sf::Font font;
-    if (!font.openFromFile("assets/fonts/DejaVuSans.ttf")) return -1;
+
     
     // dzwiek
     sf::SoundBuffer buffer;
@@ -313,14 +321,14 @@ int main()
 
     // piwo gracza
     ramkaPiwa drinkBar(barOutlineTex);
-    drinkBar.setPosition({690, 220});
+    drinkBar.setPosition({684, 220});
     
     fillPiwa visBar(barFillTex, 75);
     visBar.setPosition({690, 220});
 
     // piwo enemy
     ramkaPiwa enemyBar(barOutlineTex);
-    enemyBar.setPosition({10, 220});
+    enemyBar.setPosition({4, 220});
 
     fillPiwa visEnemyBar(barFillTex, 30);
     visEnemyBar.setPosition({10, 220});
@@ -337,43 +345,92 @@ int main()
     float gravity = 980.f;
     sf::Clock clock;
     float totalTime = 0;
-    while (window.isOpen()) {
-        if (currentState == GameState::Game) {
-            logicalBackground.setTexture(&gameBG);
+
+
+while (window.isOpen())
+{
+    // ===== CZAS =====
+    float dt = clock.restart().asSeconds();
+    totalTime += dt;
+
+    // ===== ANIMACJE UI =====
+    float scaleX = 1.f + 0.07f * std::sin(totalTime * 2.f);
+    float scaleY = 1.f + 0.07f * std::cos(totalTime * 2.f);
+    logo.setScale({ scaleX, scaleY });
+
+    // ===== MYSZ =====
+    sf::Vector2i mousePosI = sf::Mouse::getPosition(window);
+    sf::Vector2f mousePosUI = window.mapPixelToCoords(mousePosI);
+    sf::Vector2f mousePos   = window.mapPixelToCoords(mousePosI, view);
+
+    float ramp_up = 250.f * dt * 2.f;
+
+    // ===== EVENTY =====
+    while (const std::optional event = window.pollEvent())
+    {
+        if (event->is<sf::Event::Closed>())
+            window.close();
+
+        if (currentState == GameState::LoginScreen)
+        {
+            login.handleEvent(*event);
         }
-
-        float dt = clock.restart().asSeconds();
-
-        totalTime += dt;
-        float scaleX = 1.f + 0.07 * std::sin(totalTime*2);
-        float scaleY = 1.f + 0.07 * std::cos(totalTime * 2);
-        logo.setScale({ scaleX, scaleY });
-
-        sf::Vector2i mousePosI = sf::Mouse::getPosition(window);
-        sf::Vector2f mousePosUI = window.mapPixelToCoords(mousePosI); // bez view
-
-        sf::Vector2f mousePos = window.mapPixelToCoords(mousePosI, view);
-        float ramp_up = 250.f * dt * 2;
-
-        while (const std::optional event = window.pollEvent())
-        eventLoop(event, window, view, currentState, playButton, mousePosUI, exitButton);
-            
-        logic(currentState, game, ball, can, ramp_up, ball2, gravity, dt, sound, visBar, level, levelDisplay, visEnemyBar);
-        
-        scoreText.setString("Gracz: " + std::to_string(game.scorePlayer) + "\tBot: " + std::to_string(game.scoreBot));
-        roundText.setString("Runda: " + std::to_string(game.round));
-
-        window.clear(sf::Color::Black);
-        window.setView(view);
-        window.draw(logicalBackground);
-
-        drawGame(currentState, playButton, window, exitButton, ball, can, ball2, game, aim, move, drink, drinkBar, visBar, levelDisplay, enemyBar, visEnemyBar, scoreText, roundText);
-
-        window.display();
+        else
+        {
+            eventLoop(event, window, view, currentState,
+                      playButton, mousePosUI, exitButton);
+        }
     }
+
+    // ===== LOGIKA =====
+    if (currentState == GameState::Game)
+    {
+        logicalBackground.setTexture(&gameBG);
+
+        logic(currentState, game, ball, can, ramp_up, ball2,
+              gravity, dt, sound, visBar,
+              level, levelDisplay, visEnemyBar);
+
+        scoreText.setString(
+            "Gracz: " + std::to_string(game.scorePlayer) +
+            "\tBot: " + std::to_string(game.scoreBot)
+        );
+        roundText.setString("Runda: " + std::to_string(game.round));
+    }
+    else
+    {
+        logicalBackground.setTexture(&menuBG);
+    }
+
+    // ===== RYSOWANIE (ZAWSZE) =====
+    window.clear(sf::Color::Black);
+    window.setView(view);
+    window.draw(logicalBackground);
+
+    if (currentState == GameState::LoginScreen)
+    {
+        login.draw();
+
+        if (login.skonczono())
+        {
+            loggedUser = login.UstawGracza();
+            currentState = GameState::Menu;
+        }
+    }
+    else
+    {
+        drawGame(currentState, playButton, window, exitButton,
+                 ball, can, ball2, game,
+                 aim, move, drink,
+                 drinkBar, visBar,
+                 levelDisplay,
+                 enemyBar, visEnemyBar,
+                 scoreText, roundText);
+    }
+
+    window.display();
 }
-
-
+}
 void eventLoop(const std::optional<sf::Event> &event, sf::RenderWindow &window, sf::View &view, GameState &currentState, Button &playButton, sf::Vector2f &mousePos, Button &exitButton){
 
     // 1.1 zamknięcie
@@ -388,10 +445,17 @@ void eventLoop(const std::optional<sf::Event> &event, sf::RenderWindow &window, 
         view.setCenter({mainWin.x / 2.f, mainWin.y / 2.f});
         window.setView(view);
     }
+    
+    // login panel 1.25
+    // loginPanel.handleEvent(event);
+
+    // if (loginPanel.isFinished()) {
+    //     currentState = GameState::Menu;
+    // }
 
     // 1.3 menu
     else if (currentState == GameState::Menu || currentState == GameState::CustomizeMenu )
-    {
+    {   
         handleMenu(event, playButton, mousePos, currentState, exitButton, window);
     }
 }

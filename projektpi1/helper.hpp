@@ -514,6 +514,7 @@ public:
                 text.setString(textString);
                 text.setCharacterSize(charSize);
                 text.setFont(fontF);
+                fontF.setSmooth(false);
                 hasText = true;
             }
         }
@@ -523,7 +524,7 @@ public:
             shape.setTexture(&b_texture);
             shape.setFillColor(color);
         }
-        if (hasText) text.setPosition(sf::Vector2f(position.x + size.x / 2.0f - text.getLocalBounds().size.x / 2.0f, position.y + size.y / 2.0f - text.getLocalBounds().size.y / 2.0f - 7.0f));
+        if (hasText) text.setPosition(sf::Vector2f(position.x + size.x / 2.0f - text.getLocalBounds().size.x / 2.0f, position.y + size.y / 2.0f - text.getLocalBounds().size.y / 2.0f - 13.0f));
     }
 
     Button(const Button& other)

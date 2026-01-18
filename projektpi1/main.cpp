@@ -1045,7 +1045,7 @@ void bounce(canSprite &ball, middleCanSprite&can, GameStart &game, sf::Sound &so
         game.velocity.y = -100.f;
         game.velocity.x = - (can.getPosition().x - ball.getPosition().x) * 3;
         
-
+        sound.play();
         game.hasHit   = true;   // blokada na resztę lotu
         game.hitEvent = true;   // JEDNORAZOWY event do logic()
     }

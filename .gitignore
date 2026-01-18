@@ -49,3 +49,4 @@ build/*
 !build/gpp_build.sh
 /projektpi1/save.txt
 /projektpi1/score.txt
+/projektpi1/score.txt

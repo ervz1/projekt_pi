@@ -67,6 +67,32 @@ inline spritePalette mainPalette = {
     skinPalette
 };
 
+struct ScoreEntry {
+    std::string name;
+    int score;
+};
+
+std::vector<ScoreEntry> loadScores(const std::string& path) {
+    std::vector<ScoreEntry> scores;
+    std::ifstream file(path);
+
+    if (!file.is_open())
+        return scores;
+
+    std::string line;
+    while (std::getline(file, line)) {
+        auto pos = line.find(':');
+        if (pos == std::string::npos) continue;
+
+        ScoreEntry e;
+        e.name = line.substr(0, pos);
+        e.score = std::stoi(line.substr(pos + 1));
+        scores.push_back(e);
+    }
+
+    return scores;
+}
+
 
 // hair, hat, face
 inline std::string paths[] = {
@@ -74,8 +100,6 @@ inline std::string paths[] = {
     "assets/img/sprites/hat/",
     "assets/img/sprites/face/"
 };
-
-
 
 // charlook(int hatID, int hairID, int faceID, sfcolor topColor, sfcolor pantsColor, sfcolor shoeColor, sfcolor hairColor, sfcolor skinColor)
 struct charLook {
@@ -849,7 +873,6 @@ inline void saveCharacterToFile(const charLook& character) {
     }
 }
 
-
 class PowerBar {
 public:
     PowerBar() {
@@ -881,8 +904,6 @@ private:
     sf::RectangleShape bar;
     sf::Texture texture;
 };
-
-
 
 inline charLook loadCharacterFromFile() {
     std::ifstream file("save.txt");

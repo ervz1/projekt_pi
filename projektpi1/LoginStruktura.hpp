@@ -146,7 +146,7 @@ if (state == LoginState::PodajHaslo) {
         zalogowano = true;
         state = LoginState::PrzejdzDalej;
     } else {
-        infoText.setString("Bledne haslo. Sprobuj ponownie.");
+        infoText.setString("\t\t  Bledne haslo. Sprobuj ponownie.");
     }
 
     inputBuffer.clear();
@@ -170,15 +170,15 @@ void LoginPanelSFML::updateTexts() {
     inputText.setString("");
 
     if (state == LoginState::EnterLogin) {
-        infoText.setString("Podaj login:");
+        infoText.setString("\t\t\t\t  Podaj login:");
         maskInput = false;
     }
     else if (state == LoginState::PodajHaslo) {
-        infoText.setString("Witaj " + Gracz + ", podaj haslo");
+        infoText.setString("\t\t  Witaj " + Gracz + ", podaj haslo:");
         maskInput = true;
     }
     else {
-        infoText.setString("Ustaw haslo dla " + Gracz);
+        infoText.setString("\t\t\tUstaw haslo dla " + Gracz + ":");
         maskInput = true;
     }
 }

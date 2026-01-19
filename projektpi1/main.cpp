@@ -36,6 +36,12 @@ sf::Texture custClothesBGText("assets/img/clothesBG.png");
 sf::Texture colorSelectBGText("assets/img/colorSelectBG.png");
 sf::RectangleShape logicalBackground(mainWin);
 sf::Font font;
+
+
+std::vector<sf::Text> leaderboardTexts;
+bool leaderboardBuilt = false;
+
+
 sf::RectangleShape endScreenBG({ 785.f, 497.f });
 sf::RectangleShape mirror;
 sf::RectangleShape chooseBGS;
@@ -1181,23 +1187,55 @@ void drawGame(GameState currentState, Button& playButton, sf::RenderWindow& wind
 
         fadingOut = true;
 
-        if (!game.scoreSaved) { 
-            std::ofstream file("score.txt", std::ios::app);
-            file << loggedUser << ":" << game.scorePlayer << "\n";
-            //loggedUser
-            game.scoreSaved = true;
-        }
+
+                leaderboardTexts.clear();
+            
+                auto scores = loadScores("score.txt");
+                bool qualifies = false;
+
+                if (scores.size() < 10) {
+                    qualifies = true;
+                } else if (game.scorePlayer > scores.back().score) {
+                    qualifies = true;
+                }
+
+                std::sort(scores.begin(), scores.end(),
+                    [](const ScoreEntry& a, const ScoreEntry& b) {
+                        return a.score > b.score;
+                    });
+
+                float y = 350.f;
+                int place = 1;
+
+                for (const auto& s : scores) {
+                    sf::Text t(font, "", 28);
+                    t.setFillColor(sf::Color::White);
+                    t.setPosition({ 220.f, y });
+                    t.setString(
+                        std::to_string(place) + ". " + s.name + " - " + std::to_string(s.score)
+                    );
+
+                    leaderboardTexts.push_back(t);
+                    y += 32.f;
+                    if (++place > 10) break;
+                }
+
+                leaderboardBuilt = true;
+        
 
         sf::Text userScore(font, "", 48);
         userScore.setFillColor(sf::Color::White);
         userScore.setPosition({ 220.f, 250.f });
-        userScore.setString( "Twoj Wynik: \n" + loggedUser + ": " + std::to_string(game.scorePlayer));
+        userScore.setString( "\tTwoj Wynik: \n" + loggedUser + ": " + std::to_string(game.scorePlayer) + "\n");
         
 
         
         window.draw(endScreenBG);
         window.draw(logo);
         window.draw(userScore);
+        for (const auto& t : leaderboardTexts) {
+            window.draw(t);
+        }
         
         //playButton.draw(window);
         exitButton.draw(window);
